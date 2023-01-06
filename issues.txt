@@ -1,0 +1,19 @@
+Bij het verwijderen van een gesprek wordt de het gesprek en de beoordeling verwijderd (deze twee tabellen horen bij elkaar 1:1).
+Het resutlaat, de punten worden niet uit de result tabel gehaald. Als alle gesprekken bij een werkproces worden weggehaald dan heb
+je dus een orphan result voor en dit levert een foutmelding op in het examen resultaat overzicht.
+  Los dit (tijdelijk) op met query: "delete from results where studentid=21 and formid=15"
+  voor student 21 en bepaal de forms die horen bij het werkproces
+
+Je kunt geen studenten weghalen, er zou een 'deleted' flag moeten komen.
+
+Crucial criteria zie je niet in resultatenscherm
+
+Correctie  maken en openlaten staan, dan openieuw beoordeling openen vanuit resulstatescherm -> fout!
+
+04/06/2021, als examen is afgetekend door 2de examinator dan mogen geen wijzingen meer worden gedaan want die worden dan 
+niet meer doorgerekend. Oplossing is om beoordeling weg te gooien en fomrs opnieuw te editen en dan opnieuw te saven.
+Aanpassings na dichte beoordeling -> waarschuwing laten zien of afschermen?
+
+PrintAll examens wordt gekoppeld via werkproces aan examen, maar daarmee heb je alle examens (her en origineel).
+In uitslag staat ook een examenid maar die lijkt onjuist te zijn gevuld (altijd 1)??
+
