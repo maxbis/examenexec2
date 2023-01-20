@@ -7,6 +7,7 @@ namespace app\controllers;
 
 class MyHelpers
 {
+    // this is a static function
     public static function checkIP() {
         if ( $_SERVER['REMOTE_ADDR'] == '::1' ){
             $remoteIP='178.84.73.55';
