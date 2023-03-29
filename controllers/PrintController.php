@@ -150,7 +150,7 @@ class PrintController extends Controller
     
         foreach($studenten as $student) {
             $content        = $this->actionIndex($student['id'], $examen['id'], null, true);
-            $fnStudentNaam  = $this->createValidFileName(trim($student['naam']));
+            $fnStudentNaam  = $this->createValidFileName(trim($student['naam']),'-');
             $pdfFileName    = $fnStudentNaam.'-'.$fnExamenNaam.'-'.$fnDatum.'-'.$student['nummer'].'.pdf';
             $pdfFileName    = $student['nummer'].'_25187_'.$fnExamenNaam.'_'.$fnDatum.'_'.$student['naam'].'.pdf';
             $pdfFileName    = $this->createValidFileName($pdfFileName);
@@ -297,9 +297,9 @@ class PrintController extends Controller
 
     }
 
-    function createValidFileName($inputText) {
+    function createValidFileName($inputText, $space='_') {
         $search  = array('ç', 'Ü', 'ü', 'Ç', 'ğ', 'Ğ', 'ı', 'İ', 'ö', 'Ö', 'ş', 'Ş', 'š', 'ć', ' ');
-        $replace = array('c', 'U', 'u', 'C', 'g', 'G', 'i', 'I', 'o', 'O', 's', 'S', 's', 'c', '_');
+        $replace = array('c', 'U', 'u', 'C', 'g', 'G', 'i', 'I', 'o', 'O', 's', 'S', 's', 'c', $space);
         $outputText=str_replace($search, $replace, $inputText);
         return iconv("UTF-8", "ISO-8859-1//IGNORE", $outputText);
     }

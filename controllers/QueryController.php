@@ -312,7 +312,6 @@ class QueryController extends Controller
         ]);
     }
 
-
     public function actionResultaat() {
         // SPL uses wierd round up; it will always round up to the next 0.1 so 3.01 -> 3.1
         $sql="
