@@ -241,7 +241,7 @@ class PrintController extends Controller
                 if ( ! $uitslag ) { // if no uitslag (case Delano in examenid=2)
                     continue;
                 }
-                $criterium=Criterium::find()->where(['werkprocesid'=>$wp['id']])->orderBy(['id'=> SORT_DESC ])->asArray()->all();
+                $criterium=Criterium::find()->where(['werkprocesid'=>$wp['id']])->orderBy(['sort_order'=> SORT_DESC ])->asArray()->all();
                 $resultaat=json_decode($uitslag->resultaat, true);
 
                 // Header - 2 regels

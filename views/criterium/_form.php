@@ -14,6 +14,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'omschrijving')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'sort_order') ?>
+
     <?= $form->field($model, 'nul')->textArea(['rows' => 3]) ?>
 
     <?= $form->field($model, 'een')->textArea(['rows' => 3]) ?>

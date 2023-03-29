@@ -297,7 +297,7 @@ class UitslagController extends Controller
             WHERE f.werkproces=:werkproces
             AND e.actief=1
             GROUP BY 1,2,3,4,5,6,7,8,9,10
-            ORDER BY 1,2
+            ORDER BY sort_order,1,2
         ";
         $params = [':studentid'=> $studentid,':werkproces'=>$wp];
         $results = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
