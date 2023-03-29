@@ -33,7 +33,7 @@ class Criterium extends \yii\db\ActiveRecord
     {
         return [
             [['omschrijving', 'nul', 'een', 'werkprocesid', 'cruciaal'], 'required'],
-            [['cruciaal'], 'integer'],
+            [['cruciaal','sort_order'], 'integer'],
             [['omschrijving'], 'string', 'max' => 50],
             [['nul', 'een', 'twee', 'drie'], 'string', 'max' => 400],
             [['werkprocesid'], 'string', 'max' => 10],
@@ -54,6 +54,7 @@ class Criterium extends \yii\db\ActiveRecord
             'drie' => 'Drie',
             'werkprocesid' => 'Werkproces ID',
             'cruciaal' => 'Cruciaal',
+            'sort_order' => 'Sort'
         ];
     }
 }
