@@ -152,7 +152,7 @@ class PrintController extends Controller
             $content        = $this->actionIndex($student['id'], $examen['id'], null, true);
             $fnStudentNaam  = $this->createValidFileName(trim($student['naam']),'-');
             $pdfFileName    = $fnStudentNaam.'-'.$fnExamenNaam.'-'.$fnDatum.'-'.$student['nummer'].'.pdf';
-            $pdfFileName    = $student['nummer'].'_25187_'.$fnExamenNaam.'_'.$fnDatum.'_'.$student['naam'].'.pdf';
+            $pdfFileName    = $student['nummer'].'_25187_'.$fnExamenNaam.'_'.$fnDatum.'_'.$fnStudentNaam.'.pdf';
             $pdfFileName    = $this->createValidFileName($pdfFileName);
             
             $zip->addFromString($pdfFileName, $content);
