@@ -147,10 +147,10 @@ class ExamenController extends Controller
     public function actionToggleActief($id) {
         // function toggles boolean actief
         $sql="update examen set actief=1 where id = :id; update examen set actief=0 where id != :id;";
-        $sql="update examen set actief=abs(actief-1) where id = :id;";
+        # $sql="update examen set actief=abs(actief-1) where id = :id;";
         $params = array(':id'=> $id);
         Yii::$app->db->createCommand($sql)->bindValues($params)->execute();
-        return $this->redirect(['index']);
+        return $this->redirect(['/uitslag/index']);
     }
 
     public function actionCopyExam($id) {
