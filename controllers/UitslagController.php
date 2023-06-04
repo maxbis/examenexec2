@@ -582,7 +582,7 @@ class UitslagController extends Controller
         $jsonString="{".rtrim($jsonString,',')."}"; 
         $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id where id=:id";
         $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id];
-        $results = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
+        $results = Yii::$app->db->createCommand($sql)->bindValues($params)->execute();
     }
 
     protected function findModel($id)
