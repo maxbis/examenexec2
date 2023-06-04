@@ -186,7 +186,7 @@ class UitslagController extends Controller
         foreach($result as $item) { // Result [ cijfer, result(O, V, G) ]
             // if cruciaal item niet gehaald, cijfer = 1.0 and result = O
             // ToDo
-            $cijfer=max($item['cijfer'],$item['cijfer2']/10);
+            $cijfer=number_format(max($item['cijfer'],$item['cijfer2']/10),1,'.','');
             $dataSet[$item['naam']][$item['werkproces']]['result']=[ $cijfer, $this->rating($cijfer) ];
             $dataSet[$item['naam']]['studentid']=$item['studentid'];
             $dataSet[$item['naam']]['groep']=$item['klas'];
@@ -195,7 +195,7 @@ class UitslagController extends Controller
         // d($werkproces);
         // dd($dataSet);
 
-        // create cruciaalList, ass. array with key studentid.werkprocess to indicate that thsi student for this wp has failed becasue of crucial item
+        // create cruciaalList, ass. array with key studentid.werkprocess to indicate that this student for this wp has failed becasue of crucial item
         $sql="
         SELECT distinct studentid, wp FROM (
             SELECT s.naam naam, s.id studentid, f.werkproces wp, v.mappingid mappingid,
@@ -206,16 +206,18 @@ class UitslagController extends Controller
             INNER JOIN criterium c on c.id = v.mappingid
             INNER JOIN form f on f.id=v.formid
             INNER JOIN examen e on e.id=f.examenid
+            LEFT JOIN uitslag u ON u.studentid=r.studentid AND u.werkproces=f.werkproces AND u.examenid=f.examenid
             WHERE v.volgnr = r.vraagnr
             AND e.id=:examenid
             AND f.examenid=:examenid
             GROUP BY 1,2,3,4
-            HAVING MAX(cruciaal)=1 AND SUM(score)<5
+            HAVING MAX(cruciaal)=1 AND SUM(score)<5 AND SUM(cijfer)<5
         ) AS sub
         ORDER BY 1
         ";
 
         $cruciaal = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
+        //dd($cruciaal);
         $cruciaalList=[];
         foreach($cruciaal as $item) {
             $cruciaalList[$item['studentid'].$item['wp']]=1;
@@ -223,7 +225,7 @@ class UitslagController extends Controller
 
         if ($export) $this->dataToExcel($dataSet, $wp, $examen);
 
-       //dd($cruciaalList);
+       // dd($cruciaalList);
         return $this->render('index', [
             'dataSet' => $dataSet,
             'formWpCount' =>$formWpCount, // formcount per wp
@@ -562,7 +564,8 @@ class UitslagController extends Controller
             }
             $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $count*3);
         }
-        return $this->redirect('/uitslag/result-all?studentid='.$data['studentid'].'&wp=B1-K2-W1');
+
+        return $this->redirect('/uitslag/result-all?studentid='.$data['studentid']);
     }
 
     protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore) {

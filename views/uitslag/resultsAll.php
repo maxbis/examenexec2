@@ -91,7 +91,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
     <form action="update-uitslag" id="myform" method=post>
     <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
-    <input type="hidden" name="studentid" value="<?= $student['nummer']  ?>" />
+    <input type="hidden" name="studentid" value="<?= $student['id']  ?>" />
 
         <?php
 
