@@ -128,7 +128,7 @@ class UitslagController extends Controller
                     ORDER BY 1,2
                 ) as sub
             INNER JOIN werkproces w ON w.id=formnaam
-            group by naam, studentid, klas, formnaam, maxscore
+            group by 1,2,3,4
             order by 1
         ";
         $params = [':examenid'=> $examenid];
