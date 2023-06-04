@@ -124,11 +124,11 @@ class UitslagController extends Controller
                     WHERE v.volgnr = r.vraagnr
                     AND e.id=:examenid
                     AND f.examenid=:examenid
-                    GROUP BY 1,2,3,4,5
+                    GROUP BY 1,2,3,4,5,7
                     ORDER BY 1,2
                 ) as sub
             INNER JOIN werkproces w ON w.id=formnaam
-            group by 1,2,3,4
+            group by 1,2,3,4,6
             order by 1
         ";
         $params = [':examenid'=> $examenid];
