@@ -573,7 +573,8 @@ class UitslagController extends Controller
             $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$count*3,$b1,$b2);
         }
 
-        return $this->redirect('uitslag/result-all?studentid='.$data['studentid']);
+        // return $this->redirect('uitslag/result-all?studentid='.$data['studentid']);
+        return $this->goBack((!empty(Yii::$app->request->referrer) ? Yii::$app->request->referrer : null));
     }
 
     protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore, $beoordeelaar1id, $beoordeelaar2id) {
@@ -581,8 +582,15 @@ class UitslagController extends Controller
         $cijfer= round( (( max(0,$total) / $maxscore*9+1) +0.049) ,1)*10;
 
         $jsonString="{".rtrim($jsonString,',')."}"; 
-        $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id where id=:id";
-        $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id];
+        if ( $beoordeelaar1id && $beoordeelaar2id && False) {
+            $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id where id=:id";
+            $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id];
+        } else {
+             $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total where id=:id";
+             $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer];
+        }
+       
+        
         $results = Yii::$app->db->createCommand($sql)->bindValues($params)->execute();
     }
 
