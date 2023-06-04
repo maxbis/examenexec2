@@ -112,8 +112,8 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                     <div class="col-4">Cijfer</div>
                 </div>
                 <div class="row row-cols-auto">
-                    <div class="col-4"><input type="text" size="10" name="beoordeelaar1id" value="<?= $uitslag['beoordeelaar1id'] ?>" /></div>
-                    <div class="col-4"><input type="text" size="10 name="beoordeelaar2id" value="<?= $uitslag['beoordeelaar2id'] ?>" /></div>
+                    <div class="col-4"><input type="text" size="10" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?= $uitslag['beoordeelaar1id'] ?>" /></div>
+                    <div class="col-4"><input type="text" size="10" name="b2_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?= $uitslag['beoordeelaar2id'] ?>" /></div>
                     <div id="cijfer-<?= $uitslag['werkproces'] ?>" class="col-4"><?= $uitslag['cijfer']/10 ?></div>
                 </div>
             </div>
