@@ -23,6 +23,8 @@ use yii\filters\AccessControl;
 
 use yii\helpers\ArrayHelper;
 
+use app\models\UitslagSearch;
+
 /**
  * BeoordelingController implements the CRUD actions for Beoordeling model.
  */
@@ -109,24 +111,25 @@ class UitslagController extends Controller
         }
 
         $sql="
-        select naam, studentid, klas, formnaam werkproces, round( ((greatest(0,sum(score))  /maxscore*9+1))+0.049 ,1)  cijfer
-            from (
-                SELECT s.naam naam, s.id studentid, s.klas klas, f.werkproces formnaam, v.mappingid mappingid, 
-                round(sum(r.score)/10,0) score
-                FROM results r
-                INNER JOIN student s on s.id=r.studentid
-                INNER JOIN vraag v on v.formid = r.formid
-                INNER JOIN form f on f.id=v.formid
-                INNER JOIN examen e on e.id=f.examenid
-                WHERE v.volgnr = r.vraagnr
-                AND e.id=:examenid
-                AND f.examenid=:examenid
-                GROUP BY 1,2,3,4,5
-                ORDER BY 1,2
-            ) as sub
-        INNER JOIN werkproces w ON w.id=formnaam
-        group by naam, studentid, klas, formnaam, maxscore
-        order by 1
+            select naam, studentid, klas, formnaam werkproces, round( ((greatest(0,sum(score))  /maxscore*9+1))+0.049 ,1)  cijfer, cijfer2
+                from (
+                    SELECT s.naam naam, s.id studentid, s.klas klas, f.werkproces formnaam, v.mappingid mappingid, 
+                    round(sum(r.score)/10,0) score, u.cijfer cijfer2
+                    FROM results r
+                    INNER JOIN student s on s.id=r.studentid
+                    INNER JOIN vraag v on v.formid = r.formid
+                    INNER JOIN form f on f.id=v.formid
+                    INNER JOIN examen e on e.id=f.examenid
+                    LEFT OUTER join uitslag u on u.werkproces=f.werkproces and u.studentid=s.id
+                    WHERE v.volgnr = r.vraagnr
+                    AND e.id=:examenid
+                    AND f.examenid=:examenid
+                    GROUP BY 1,2,3,4,5
+                    ORDER BY 1,2
+                ) as sub
+            INNER JOIN werkproces w ON w.id=formnaam
+            group by naam, studentid, klas, formnaam, maxscore
+            order by 1
         ";
         $params = [':examenid'=> $examenid];
         $result = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
@@ -151,8 +154,11 @@ class UitslagController extends Controller
         $params = [':examenid'=> $examenid, ':sortorder'=>$sortorder];
         $progres = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();  // [ 0 => [ 'naam' => 'Achraf Rida ', 'werkproces' => 'B1-K1-W1', 'cnt' => '3'], 1 => .... ]
 
-        // d($progres);
-        // d($result);
+        // ($progres);
+        // dd($result); // 'naam' => 'Alisha Soedamah', 'studentid' => '122', 'klas' => '0A', 'werkproces' => 'B1-K1-W1', 'cijfer' => '7.0'
+
+        // TODO if the uitslag cijfer is gevuld dan cijfer uit uitslagen nemen en niet de bestaande routine gebruiken.
+
         $wp=[];
         foreach($formWpCount as $key => $value) {
             $wp[]=$key;
@@ -175,11 +181,13 @@ class UitslagController extends Controller
             }
            
         }
+        // dd($result);
         
         foreach($result as $item) { // Result [ cijfer, result(O, V, G) ]
             // if cruciaal item niet gehaald, cijfer = 1.0 and result = O
             // ToDo
-            $dataSet[$item['naam']][$item['werkproces']]['result']=[ $item['cijfer'], $this->rating($item['cijfer']) ];
+            $cijfer=max($item['cijfer'],$item['cijfer2']/10);
+            $dataSet[$item['naam']][$item['werkproces']]['result']=[ $cijfer, $this->rating($cijfer) ];
             $dataSet[$item['naam']]['studentid']=$item['studentid'];
             $dataSet[$item['naam']]['groep']=$item['klas'];
         }
@@ -191,8 +199,7 @@ class UitslagController extends Controller
         $sql="
         SELECT distinct studentid, wp FROM (
             SELECT s.naam naam, s.id studentid, f.werkproces wp, v.mappingid mappingid,
-                    MAX(c.cruciaal),
-                        SUM(r.score)
+                    MAX(c.cruciaal), SUM(r.score)
             FROM results r
             INNER JOIN student s on s.id=r.studentid
             INNER JOIN vraag v on v.formid = r.formid
@@ -362,11 +369,140 @@ class UitslagController extends Controller
 
     }
 
+    function actionResultAll($studentid){
+
+        $examen=Examen::find()->where(['actief'=>1])->asArray()->one();
+        $werkprocesses=Werkproces::find()->joinWith('examen')->where(['examen.actief'=>1])->orderBy(['id' => SORT_ASC])->asArray()->all();
+        $student=Student::find()->where(['id'=>$studentid])->asArray()->one();
+
+        //$uitslag=Uitslag::find()->where(['and', ['studentid'=>$studentid], ['werkproces'=>$wp], ['examenid'=>$examen['id']] ])->one();
+
+        $rolspelers = Rolspeler::find()->where(['actief'=>1])->orderBy(['naam'=>SORT_ASC])->all();
+
+        $sql="select * from uitslag where examenid=".$examen['id']." and studentid=".$studentid." order by werkproces";
+        $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
+
+        if ( ! $uitslagen ){
+            $this->createUitslag($studentid);
+            return $this->redirect(['/uitslag/result-all', 'studentid'=>$studentid ]);
+        }
+
+
+        $sql="select * from criterium";
+        $rubics = Yii::$app->db->createCommand($sql)->queryAll();
+        $rubics = ArrayHelper::index($rubics, function($elem) { return $elem['id']; }); 
+
+        // $uitslagen = ArrayHelper::index($uitslagen, function($elem) { return $elem['werkproces']; }); 
+        return $this->render('resultsAll', [
+            'examen' => $examen,
+            'werkprocesses' =>$werkprocesses,
+            'student' => $student,
+            'rolspelers' => $rolspelers,
+            'uitslagen' => $uitslagen,
+            'rubics' => $rubics
+        ]);
+
+    }
+
+    protected function createUitslag($studentid){
+        $examen=Examen::find()->where(['actief'=>1])->asArray()->one();
+        $werkprocesses=Werkproces::find()->joinWith('examen')->where(['examen.actief'=>1])->orderBy(['id' => SORT_ASC])->asArray()->all();
+
+        foreach($werkprocesses as $wp) {
+            $examenid=$examen['id'];
+            $werkproces=$wp['id'];
+
+            //commentaar
+            $sql="
+                select GROUP_CONCAT(CONCAT('[',f2.omschrijving,']: ', b2.opmerking, '\n')) opmerkingen
+                from beoordeling b2
+                INNER JOIN form f2 ON f2.id=b2.formid
+                where b2.id = any 
+                (
+                    SELECT max(b.id)
+                    FROM beoordeling b
+                    INNER JOIN form f ON f.id=b.formid
+                    WHERE studentid='$studentid'
+                    AND f.werkproces='$werkproces'
+                    AND f.examenid='$examenid'
+                    AND opmerking != ''
+                    group by f.id
+                )";
+            $commentaar = Yii::$app->db->createCommand($sql)->queryAll()[0]['opmerkingen'];
+            // $commentaar = yii::$app->db->quoteValue($commentaar);
+
+            // resultaat
+            $sql="
+                SELECT  v.mappingid mappingid, sum(score) score
+                FROM criterium c
+                INNER JOIN vraag v ON v.mappingid=c.id
+                INNER JOIN form f ON f.id=v.formid
+                INNER JOIN examen e ON e.id = f.examenid
+                LEFT OUTER JOIN results r ON r.formid=f.id AND r.vraagid=v.id AND r.studentid=:studentid
+                WHERE e.actief=1
+                AND f.werkproces='$werkproces'
+                GROUP BY 1
+                ORDER BY 1
+            ";
+            $params = [':studentid'=> $studentid];
+            $results = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
+            $results = ArrayHelper::index($results, function($elem) { return $elem['mappingid']; }); 
+            $json=[];
+            $aantal=0;$total=0;
+            foreach($results as $key => $value) {
+                $aantal++;
+                $total=$total+$value['score']/10;
+                $json[$key]=$value['score']/10;
+            }
+            $resultaat=json_encode($json);
+            $maxscore=$aantal*3;
+            $cijfer= round( (( max(0,$total) / $maxscore*9+1) +0.049) ,1)*10;
+
+            //dd([$studentid, $examenid, $werkproces, $commentaar, $resultaat]);
+
+            $sql="insert into uitslag (studentid, examenid, werkproces, commentaar, resultaat, cijfer) values (:studentid, :examenid, :werkproces, :commentaar, :resultaat, :cijfer)";
+            $params = [':studentid'=> $studentid,':examenid'=>$examenid, ':werkproces'=>$werkproces, ':commentaar'=>$commentaar, ':resultaat'=>$resultaat, ':cijfer'=>$cijfer];
+            $results = Yii::$app->db->createCommand($sql)->bindValues($params)->execute();
+        }
+    }
+
     // with studentid and formid get the most recent gesprek
     function actionGetForm($studentid, $formid, $mappingid=NULL) {
         $gesprek = Gesprek::find()->Where(['formid'=>$formid])->andWhere(['studentid'=>$studentid])->orderBy(['created' => SORT_DESC])->asArray()->one();
         return $this->redirect(['/vraag/form', 'gesprekid'=>$gesprek['id'] , 'compleet'=>1, 'mappingid'=>$mappingid]);
     }
+
+    public function actionRead()
+    {
+        $searchModel = new UitslagSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('read', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionCreate()
+    {
+        $model = new Uitslag();
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->render('create', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionView($id)
+    {
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
+    }
+
 
     function actionUpdate() {
         $postedModel = new Uitslag();
@@ -382,10 +518,70 @@ class UitslagController extends Controller
         
         if ($model->save()) {
             //dd([$model->id, $model->resultaat]);
-            return $this->redirect(['index']);
+            return $this->redirect(['read']);
         } else {
             return $this->redirect(Yii::$app->request->referrer);
         }
+    }
+
+    function actionUpdateUitslag() {
+        if (Yii::$app->request->post()) {
+            $data = Yii::$app->request->post();
+
+            $sql="select * from werkproces";
+            $werkprocesses = Yii::$app->db->createCommand($sql)->queryAll();
+            $werkprocesses = ArrayHelper::index($werkprocesses, function($elem) { return $elem['id']; }); 
+            // dd( $werkprocesses );
+            // dd($data);
+            $jsonString="";
+            $prevId=0;
+            $total=0;
+            $count=0;
+            // dd($data);
+            foreach($data as $key => $value) {
+                if ( strpos($key, '_') ) {
+                    [$veld, $id, $subid] = explode("_",$key);
+
+                    if ( $prevId && $prevId!=$id ) {
+                        $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $count*3);
+                        $jsonString="";
+                        $total=0;
+                        $count=0;
+                    }
+
+                    if ( $veld =="resultaat" ) {
+                        $jsonString.= "\"".$subid."\":".$value.",";
+                        $total+=$value;
+                        $count++;
+                    }
+                    if ( $veld == "opmerking" ) {
+                        $opmerking=$value;
+                    }
+                    $prevId=$id;
+                }
+            }
+            $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $count*3);
+        }
+        return $this->redirect('/uitslag/result-all?studentid='.$data['studentid'].'&wp=B1-K2-W1');
+    }
+
+    protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore) {
+
+        $cijfer= round( (( max(0,$total) / $maxscore*9+1) +0.049) ,1)*10;
+
+        $jsonString="{".rtrim($jsonString,',')."}"; 
+        $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total where id=:id";
+        $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer];
+        $results = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
+    }
+
+    protected function findModel($id)
+    {
+        if (($model = Uitslag::findOne($id)) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }
 

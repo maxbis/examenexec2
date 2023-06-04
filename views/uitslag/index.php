@@ -96,7 +96,9 @@ $numberOfColumns=$colspan*3+5;
                     $nr++;
                     echo "<tr>";
                     echo "<td class=\"text-muted\">".$nr."</td>";
-                    echo "<td>".$value['groep']."</td>";
+                    echo "<td>";
+                    echo Html::a( $value['groep'], ['/uitslag/result-all', 'studentid'=>$value['studentid'] ] );
+                    echo "</td>";
                     $onvoldoende=false;
                     
                     foreach($wp as $thisWp) {
