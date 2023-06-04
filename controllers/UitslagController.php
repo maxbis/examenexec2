@@ -211,7 +211,7 @@ class UitslagController extends Controller
             AND e.id=:examenid
             AND f.examenid=:examenid
             GROUP BY 1,2,3,4
-            HAVING MAX(cruciaal)=1 AND SUM(score)<5 AND SUM(cijfer)<5
+            HAVING MAX(cruciaal)=1 AND SUM(score)<5 AND SUM(cijfer)<50
         ) AS sub
         ORDER BY 1
         ";

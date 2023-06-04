@@ -31,7 +31,7 @@ $numberOfColumns=$colspan*3+5;
 
 <p></p>
 
-<div class="card" style="width: 1000px">
+<div class="card" style="width: 1200px">
     <div class="card-body">
         <table class="table table-sm" border=0>
             <thead>
