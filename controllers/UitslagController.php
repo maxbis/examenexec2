@@ -541,6 +541,7 @@ class UitslagController extends Controller
             $prevId=0;
             $total=0;
             $count=0;
+            $b1='';$b2='';
             // dd($data);
             foreach($data as $key => $value) {
                 if ( strpos($key, '_') ) {
@@ -572,7 +573,7 @@ class UitslagController extends Controller
             $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$count*3,$b1,$b2);
         }
 
-        return $this->redirect('/uitslag/result-all?studentid='.$data['studentid']);
+        return $this->redirect('uitslag/result-all?studentid='.$data['studentid']);
     }
 
     protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore, $beoordeelaar1id, $beoordeelaar2id) {
