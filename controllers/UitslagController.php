@@ -186,7 +186,10 @@ class UitslagController extends Controller
         foreach($result as $item) { // Result [ cijfer, result(O, V, G) ]
             // if cruciaal item niet gehaald, cijfer = 1.0 and result = O
             // ToDo
-            $cijfer=number_format(max($item['cijfer'],$item['cijfer2']/10),1,'.','');
+            $cijfer=$item['cijfer2']/10;
+            if (! $cijfer) $cijfer=$item['cijfer'];
+            $cijfer=number_format($cijfer,1,'.','');
+
             $dataSet[$item['naam']][$item['werkproces']]['result']=[ $cijfer, $this->rating($cijfer) ];
             $dataSet[$item['naam']]['studentid']=$item['studentid'];
             $dataSet[$item['naam']]['groep']=$item['klas'];
@@ -211,7 +214,7 @@ class UitslagController extends Controller
             AND e.id=:examenid
             AND f.examenid=:examenid
             GROUP BY 1,2,3,4
-            HAVING MAX(cruciaal)=1 AND SUM(score)<5 AND (SUM(cijfer)<50 OR SUM(cijfer) IS NULL)
+            HAVING MAX(cruciaal)=1 AND SUM(score)<5 OR (SUM(cijfer)<50 AND SUM(cijfer) IS NOT NULL)
         ) AS sub
         ORDER BY 1
         ";
