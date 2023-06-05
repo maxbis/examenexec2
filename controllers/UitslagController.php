@@ -14,6 +14,7 @@ use app\models\Results;
 use app\models\Gesprek;
 use app\models\Uitslag;
 use app\models\Rolspeler;
+use app\models\Criterium;
 
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -199,28 +200,30 @@ class UitslagController extends Controller
         // dd($dataSet);
 
         // create cruciaalList, ass. array with key studentid.werkprocess to indicate that this student for this wp has failed becasue of crucial item
-        $sql="
-        SELECT distinct studentid, wp FROM (
-            SELECT s.naam naam, s.id studentid, f.werkproces wp, v.mappingid mappingid,
-                    MAX(c.cruciaal), SUM(r.score)
-            FROM results r
-            INNER JOIN student s on s.id=r.studentid
-            INNER JOIN vraag v on v.formid = r.formid
-            INNER JOIN criterium c on c.id = v.mappingid
-            INNER JOIN form f on f.id=v.formid
-            INNER JOIN examen e on e.id=f.examenid
-            LEFT JOIN uitslag u ON u.studentid=r.studentid AND u.werkproces=f.werkproces AND u.examenid=f.examenid
-            WHERE v.volgnr = r.vraagnr
-            AND e.id=:examenid
-            AND f.examenid=:examenid
-            GROUP BY 1,2,3,4
-            HAVING MAX(cruciaal)=1 AND SUM(score)<5 OR (SUM(cijfer)<50 AND SUM(cijfer) IS NOT NULL)
-        ) AS sub
-        ORDER BY 1
-        ";
+        // $sql="
+        // SELECT distinct studentid, wp FROM (
+        //     SELECT s.naam naam, s.id studentid, f.werkproces wp, v.mappingid mappingid,
+        //             MAX(c.cruciaal), SUM(r.score)
+        //     FROM results r
+        //     INNER JOIN student s on s.id=r.studentid
+        //     INNER JOIN vraag v on v.formid = r.formid
+        //     INNER JOIN criterium c on c.id = v.mappingid
+        //     INNER JOIN form f on f.id=v.formid
+        //     INNER JOIN examen e on e.id=f.examenid
+        //     LEFT JOIN uitslag u ON u.studentid=r.studentid AND u.werkproces=f.werkproces AND u.examenid=f.examenid
+        //     WHERE v.volgnr = r.vraagnr
+        //     AND e.id=:examenid
+        //     AND f.examenid=:examenid
+        //     GROUP BY 1,2,3,4
+        //     HAVING MAX(c.cruciaal)=1 AND SUM(score)<5
+        // ) AS sub
+        // ORDER BY 1
+        // ";
 
-        $cruciaal = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
-        //dd($cruciaal);
+        $sql="select studentid, werkproces wp from uitslag where examenid=$examenid and cruciaal=1";
+        $cruciaal = Yii::$app->db->createCommand($sql)->queryAll();
+        // $cruciaal = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
+        // dd($cruciaal);
         $cruciaalList=[];
         foreach($cruciaal as $item) {
             $cruciaalList[$item['studentid'].$item['wp']]=1;
@@ -380,7 +383,8 @@ class UitslagController extends Controller
         $werkprocesses=Werkproces::find()->joinWith('examen')->where(['examen.actief'=>1])->orderBy(['id' => SORT_ASC])->asArray()->all();
         $student=Student::find()->where(['id'=>$studentid])->asArray()->one();
         $rolspelers=Rolspeler::find()->select('id, naam')->where(['actief'=>1])->orderBy(['naam'=>SORT_ASC])->asArray()->all();
-        // $rolspelers = ArrayHelper::map($rolspelers, 'id','naam'); 
+        $cruciaal=Criterium::find()->select('id, werkprocesid')->where(['cruciaal'=>1])->asArray()->all();
+        $cruciaal = ArrayHelper::map($cruciaal, 'id','werkprocesid');
 
         $sql="select * from uitslag where examenid=".$examen['id']." and studentid=".$studentid." order by werkproces";
         $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
@@ -402,7 +406,8 @@ class UitslagController extends Controller
             'student' => $student,
             'rolspelers' => $rolspelers,
             'uitslagen' => $uitslagen,
-            'rubics' => $rubics
+            'rubics' => $rubics,
+            'cruciaal' => $cruciaal
         ]);
 
     }
@@ -543,16 +548,18 @@ class UitslagController extends Controller
             $total=0;
             $count=0;
             $b1='';$b2='';
+            $cruciaal=0;
             // dd($data);
             foreach($data as $key => $value) {
                 if ( strpos($key, '_') ) {
                     [$veld, $id, $subid] = explode("_",$key);
 
                     if ( $prevId && $prevId!=$id ) {
-                        $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $count*3,$b1,$b2);
+                        $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $count*3,$b1,$b2,$cruciaal);
                         $jsonString="";
                         $total=0;
                         $count=0;
+                        $cruciaal=0;
                     }
 
                     if ( $veld =="resultaat" ) {
@@ -565,33 +572,36 @@ class UitslagController extends Controller
                         $opmerking=$value;
                     }
 
+                    if ( $veld == "cruciaal" ) {
+                        $cruciaal=$value;
+                    }
+
                     if ( $veld == "b1" && $value) { $b1=$value; }
                     if ( $veld == "b2" && $value) { $b2=$value; }
         
                     $prevId=$id;
                 }
             }
-            $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$count*3,$b1,$b2);
+            $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$count*3,$b1,$b2,$cruciaal);
         }
-
         // return $this->redirect('uitslag/result-all?studentid='.$data['studentid']);
         return $this->goBack((!empty(Yii::$app->request->referrer) ? Yii::$app->request->referrer : null));
     }
 
-    protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore, $beoordeelaar1id, $beoordeelaar2id) {
+    protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore, $beoordeelaar1id, $beoordeelaar2id, $cruciaal) {
+
 
         $cijfer= round( (( max(0,$total) / $maxscore*9+1) +0.049) ,1)*10;
 
         $jsonString="{".rtrim($jsonString,',')."}"; 
         if ( $beoordeelaar1id && $beoordeelaar2id && True) {
-            $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id where id=:id";
-            $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id];
+            $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id, cruciaal=:cruciaal where id=:id";
+            $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id,'cruciaal'=>$cruciaal];
         } else {
-             $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total where id=:id";
-             $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer];
+             $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, cruciaal=:cruciaal where id=:id";
+             $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer,'cruciaal'=>$cruciaal];
         }
-       
-        
+ 
         $results = Yii::$app->db->createCommand($sql)->bindValues($params)->execute();
     }
 

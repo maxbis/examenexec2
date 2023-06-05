@@ -20,7 +20,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 ?>
 
 <script>
-    function changeColor(column, punten, werkproces) {
+    function changeColor(column, punten, werkproces, cruciaal=0) {
 
         // Get the parent row of the clicked column
         var row = column.parentNode;
@@ -56,9 +56,16 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
         }
 
         var cijfer=Math.round( ((sum/aantal*3+1) + 0.049)*10 )/10;
-        // console.log(sum, aantal, cijfer);
-        // console.log("cijfer-"+werkproces);
+
         document.getElementById("cijfer-"+werkproces).textContent = cijfer;
+        if (cruciaal==1) {
+            if (punten==0) {
+                document.getElementById("cruciaal-"+werkproces).value = 1;
+            } else {
+                document.getElementById("cruciaal-"+werkproces).value = 0;
+            }
+        }
+        
 
     }
 </script>
@@ -114,7 +121,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
                 <div class="row row-cols-3">
                     <div class="col-4">
-                        <select style="background-color:#fcfcfc;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
+                        <select style="background-color:white;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
                         <?php
                         foreach($rolspelers as $rolspeler) {
                             $selected="";
@@ -144,10 +151,6 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
             <?php
 
             $resultaat=json_decode($uitslag['resultaat'], true);
- 
-            echo "<div style=\"color:#d0d0d0;\" id=json-".$uitslag['werkproces'].">";
-            echo json_encode($resultaat);
-            echo "</div>";
 
             ?>
             <table border=0 class="table">
@@ -155,25 +158,34 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                 <th>Rubics</th><th class="text-center">0</th><th class="text-center">1</th><th class="text-center">2</th><th class="text-center">3</th><th></th>
             </tr> </thead> <?php
 
+            $cruciaal=0;
+
             foreach($resultaat as $key => $value)  {
-                $omschrijving=$rubics[$key]['omschrijving'];
-                if ($rubics[$key]['cruciaal']) $omschrijving.="*";
+                if ($rubics[$key]['cruciaal'] && $resultaat[$key]==0) {
+                    $cruciaal=1;
+                }
 
                 $bgcolor=['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF'];
                 $bgcolor[$resultaat[$key]]='#d5f7ba';
 
                 echo "\n<tr>\n";
                 echo "\n<td width=80px>".$rubics[$key]['omschrijving']."</td>";
-                echo "\n<td onclick=\"changeColor(this,0,'".$uitslag['werkproces']."')\" width=80px bgcolor=".$bgcolor[0].">".$rubics[$key]['nul']."</td>";
-                echo "\n<td onclick=\"changeColor(this,1,'".$uitslag['werkproces']."')\" width=80px bgcolor=".$bgcolor[1].">".$rubics[$key]['een']."</td>";
-                echo "\n<td onclick=\"changeColor(this,2,'".$uitslag['werkproces']."')\" width=80px bgcolor=".$bgcolor[2].">".$rubics[$key]['twee']."</td>";
-                echo "\n<td onclick=\"changeColor(this,3,'".$uitslag['werkproces']."')\" width=80px bgcolor=".$bgcolor[3].">".$rubics[$key]['drie']."</td>";
+
+                echo "\n<td onclick=\"changeColor(this,0,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[0].">".$rubics[$key]['nul']."</td>";
+                echo "\n<td onclick=\"changeColor(this,1,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[1].">".$rubics[$key]['een']."</td>";
+                echo "\n<td onclick=\"changeColor(this,2,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[2].">".$rubics[$key]['twee']."</td>";
+                echo "\n<td onclick=\"changeColor(this,3,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[3].">".$rubics[$key]['drie']."</td>";
                 echo "\n<td width=20px align=\"right\"> <input style=\"border:none;color:#d0d0d0\" size=\"1\" type=\"text\" name=\"resultaat_".$uitslag['id']."_".$key."\" value=\"".$resultaat[$key]."\" readonly> </td>";
                 echo "\n</tr>\n";
             }
 
             echo "</table>";
-            ?>
+
+            echo "<div style=\"color:#d0d0d0;\" id=json-".$uitslag['werkproces'].">";
+                echo json_encode($resultaat);
+                ?>
+                <input style="color:#c0c0c0;border: 0px solid;" type="text" id="cruciaal-<?= $uitslag['werkproces']?>" name="cruciaal_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?=$cruciaal?>" />
+            </div>
             <br>
             <div class="uitslag-form">
                 <div class="row">
