@@ -106,15 +106,38 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
             ?>
             <div class="card" style="width: 40rem;border: 1px solid black;padding:10px;">
-                <div class="row row-cols-auto">
+                <div class="row row-cols-3">
                     <div class="col-4">Beoordeelaar 1</div>
                     <div class="col-4">Beoordeelaar 2</div>
                     <div class="col-4">Cijfer</div>
                 </div>
-                <div class="row row-cols-auto">
-                    <div class="col-4"><input type="text" size="10" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?= $uitslag['beoordeelaar1id'] ?>" /></div>
-                    <div class="col-4"><input type="text" size="10" name="b2_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?= $uitslag['beoordeelaar2id'] ?>" /></div>
+
+                <div class="row row-cols-3">
+                    <div class="col-4">
+                        <select style="background-color:#fcfcfc;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
+                        <?php
+                        foreach($rolspelers as $rolspeler) {
+                            $selected="";
+                            if ( $uitslag['beoordeelaar1id']  ==  $rolspeler['id'] ) $selected="selected"; 
+                            echo '<option value="' . $rolspeler['id'].'" '. $selected.'>' . $rolspeler['naam'] . '</option>';
+                        }
+                        ?>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <select style="background-color:#fcfcfc;border-width:1px;" name="b2_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
+                        <?php
+                        foreach($rolspelers as $rolspeler) {
+                            $selected="";
+                            if ( $uitslag['beoordeelaar2id']  ==  $rolspeler['id'] ) $selected="selected"; 
+                            echo '<option value="' . $rolspeler['id'].'" ' . $selected.' >' . $rolspeler['naam'] . '</option>';
+                        }
+                        ?>
+                        </select>
+                    </div>
+
                     <div id="cijfer-<?= $uitslag['werkproces'] ?>" class="col-4"><?= $uitslag['cijfer']/10 ?></div>
+
                 </div>
             </div>
             <br>

@@ -66,7 +66,7 @@ class SiteController extends Controller
         if ( ! isset(Yii::$app->user->identity->role) ) {
             return $this->redirect(['/student/login']);
         } elseif ( Yii::$app->user->identity->role == 'admin')  {
-            return $this->redirect(['/gesprek/index']);
+            return $this->redirect(['/uitslag/index']);
         } elseif ( Yii::$app->user->identity->role == 'rolspeler')  {
             return $this->redirect(['/rolspeler/login']);
         }

@@ -376,10 +376,8 @@ class UitslagController extends Controller
         $examen=Examen::find()->where(['actief'=>1])->asArray()->one();
         $werkprocesses=Werkproces::find()->joinWith('examen')->where(['examen.actief'=>1])->orderBy(['id' => SORT_ASC])->asArray()->all();
         $student=Student::find()->where(['id'=>$studentid])->asArray()->one();
-
-        //$uitslag=Uitslag::find()->where(['and', ['studentid'=>$studentid], ['werkproces'=>$wp], ['examenid'=>$examen['id']] ])->one();
-
-        $rolspelers = Rolspeler::find()->where(['actief'=>1])->orderBy(['naam'=>SORT_ASC])->all();
+        $rolspelers=Rolspeler::find()->select('id, naam')->where(['actief'=>1])->orderBy(['naam'=>SORT_ASC])->asArray()->all();
+        // $rolspelers = ArrayHelper::map($rolspelers, 'id','naam'); 
 
         $sql="select * from uitslag where examenid=".$examen['id']." and studentid=".$studentid." order by werkproces";
         $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
@@ -530,7 +528,7 @@ class UitslagController extends Controller
         if (Yii::$app->request->post()) {
             $data = Yii::$app->request->post();
 
-            //  dd($data);
+            // dd($data);
 
             $sql="select * from werkproces";
             $werkprocesses = Yii::$app->db->createCommand($sql)->queryAll();
@@ -582,7 +580,7 @@ class UitslagController extends Controller
         $cijfer= round( (( max(0,$total) / $maxscore*9+1) +0.049) ,1)*10;
 
         $jsonString="{".rtrim($jsonString,',')."}"; 
-        if ( $beoordeelaar1id && $beoordeelaar2id && False) {
+        if ( $beoordeelaar1id && $beoordeelaar2id && True) {
             $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id where id=:id";
             $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id];
         } else {
