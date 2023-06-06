@@ -206,8 +206,13 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
         ?>
 
+    <br>
+    <label><input type="checkbox" id="ready" name="ready" value="1"> Alles gecontroleerd en klaar voor printen.</label>
+    &nbsp;&nbsp;&nbsp;<small> (Als er na 'print-ready' iets wordt veranderd, dan verdwijnt het vinkje weer.)</small>
+    <br>
     <?= Html::a( 'Cancel', Yii::$app->request->referrer , ['class'=>'btn btn-primary']); ?>
     <input class="btn btn-danger" type="submit" value="Save All">
+    <br>
     </form>
 
 </div>

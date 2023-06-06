@@ -72,4 +72,9 @@ class Uitslag extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Rolspeler::className(), ['id' => 'beoordeelaar2id']);
     }
+
+    public function getStudent()
+    {
+        return $this->hasOne(Student::className(), ['id' => 'studentid']);
+    }
 }

@@ -399,7 +399,7 @@ class UitslagController extends Controller
 
         if ( ! $uitslagen ){
             $this->createUitslag($studentid);
-            return $this->redirect(['/uitslag/result-all', 'studentid'=>$studentid ]);
+            return $this->redirect(['/uitslag/index']);
         }
 
         $sql="select * from criterium";
@@ -518,6 +518,22 @@ class UitslagController extends Controller
         ]);
     }
 
+    public function actionDelete($id)
+    {
+        $this->findModel($id)->delete();
+
+        return $this->redirect(['index']);
+    }
+
+    public function actionDeleteAll($studentid, $examenid)
+    {
+        $sql="delete from uitslag where examenid=$examenid and studentid=$studentid";
+        Yii::$app->db->createCommand($sql)->execute();
+
+        dd($sql);
+
+        return $this->redirect(['index']);
+    }
 
     function actionUpdate() {
         $postedModel = new Uitslag();
@@ -543,7 +559,7 @@ class UitslagController extends Controller
         if (Yii::$app->request->post()) {
             $data = Yii::$app->request->post();
 
-            // dd($data);
+            //dd($data);
 
             $sql="select * from werkproces";
             $werkprocesses = Yii::$app->db->createCommand($sql)->queryAll();
@@ -556,13 +572,14 @@ class UitslagController extends Controller
             $count=0;
             $b1='';$b2='';
             $cruciaal=0;
-            // dd($data);
+            $ready=$data['ready'] ?? 0;
+
             foreach($data as $key => $value) {
                 if ( strpos($key, '_') ) {
                     [$veld, $id, $subid] = explode("_",$key);
 
                     if ( $prevId && $prevId!=$id ) {
-                        $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $max,$b1,$b2,$cruciaal);
+                        $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $max,$b1,$b2,$cruciaal,$ready);
                         $jsonString="";
                         $total=0;
                         $count=0;
@@ -594,23 +611,23 @@ class UitslagController extends Controller
                     $prevId=$id;
                 }
             }
-            $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$max,$b1,$b2,$cruciaal);
+            $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$max,$b1,$b2,$cruciaal,$ready);
         }
         return $this->redirect(['/uitslag/index']);
         // return $this->goBack((!empty(Yii::$app->request->referrer) ? Yii::$app->request->referrer : null));
     }
 
-    protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore, $beoordeelaar1id, $beoordeelaar2id, $cruciaal) {
+    protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore, $beoordeelaar1id, $beoordeelaar2id, $cruciaal,$ready=0) {
 
         $cijfer= round( (( max(0,$total) / $maxscore*9+1) +0.049) ,1)*10;
 
         $jsonString="{".rtrim($jsonString,',')."}"; 
         if ( $beoordeelaar1id && $beoordeelaar2id && True) {
-            $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id, cruciaal=:cruciaal where id=:id";
-            $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id,'cruciaal'=>$cruciaal];
+            $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, beoordeelaar1id=:beoordeelaar1id, beoordeelaar2id=:beoordeelaar2id, cruciaal=:cruciaal, ready=:ready where id=:id";
+            $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer, ':beoordeelaar1id'=>$beoordeelaar1id, ':beoordeelaar2id'=>$beoordeelaar2id,':cruciaal'=>$cruciaal,':ready'=>$ready];
         } else {
-             $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, cruciaal=:cruciaal where id=:id";
-             $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer,'cruciaal'=>$cruciaal];
+             $sql="update uitslag set commentaar=:opmerking, resultaat=:jsonString, cijfer=:total, cruciaal=:cruciaal , ready=:ready where id=:id";
+             $params = [':opmerking'=> $opmerking,':jsonString'=>$jsonString,':id'=>$prevId,':total'=>$cijfer,':cruciaal'=>$cruciaal,':ready'=>$ready];
         }
  
         $results = Yii::$app->db->createCommand($sql)->bindValues($params)->execute();
