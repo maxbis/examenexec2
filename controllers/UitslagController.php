@@ -111,30 +111,37 @@ class UitslagController extends Controller
             $examen=Examen::find()->where(['id' => $examenid])->asArray()->one();
         }
 
+        // $sql="
+        //     select naam, studentid, klas, formnaam werkproces, round( ((greatest(0,sum(score))  /maxscore*9+1))+0.049 ,1)  cijfer, cijfer2
+        //         from (
+        //             SELECT s.naam naam, s.id studentid, s.klas klas, f.werkproces formnaam, v.mappingid mappingid, 
+        //             round(sum(r.score)/10,0) score, u.cijfer cijfer2
+        //             FROM results r
+        //             INNER JOIN student s on s.id=r.studentid
+        //             INNER JOIN vraag v on v.formid = r.formid
+        //             INNER JOIN form f on f.id=v.formid
+        //             INNER JOIN examen e on e.id=f.examenid
+        //             LEFT OUTER join uitslag u on u.werkproces=f.werkproces and u.studentid=s.id
+        //             WHERE v.volgnr = r.vraagnr
+        //             AND e.id=:examenid
+        //             AND f.examenid=:examenid
+        //             GROUP BY 1,2,3,4,5,7
+        //             ORDER BY 1,2
+        //         ) as sub
+        //     INNER JOIN werkproces w ON w.id=formnaam
+        //     group by 1,2,3,4,6
+        //     order by 1
+        // ";
         $sql="
-            select naam, studentid, klas, formnaam werkproces, round( ((greatest(0,sum(score))  /maxscore*9+1))+0.049 ,1)  cijfer, cijfer2
-                from (
-                    SELECT s.naam naam, s.id studentid, s.klas klas, f.werkproces formnaam, v.mappingid mappingid, 
-                    round(sum(r.score)/10,0) score, u.cijfer cijfer2
-                    FROM results r
-                    INNER JOIN student s on s.id=r.studentid
-                    INNER JOIN vraag v on v.formid = r.formid
-                    INNER JOIN form f on f.id=v.formid
-                    INNER JOIN examen e on e.id=f.examenid
-                    LEFT OUTER join uitslag u on u.werkproces=f.werkproces and u.studentid=s.id
-                    WHERE v.volgnr = r.vraagnr
-                    AND e.id=:examenid
-                    AND f.examenid=:examenid
-                    GROUP BY 1,2,3,4,5,7
-                    ORDER BY 1,2
-                ) as sub
-            INNER JOIN werkproces w ON w.id=formnaam
-            group by 1,2,3,4,6
-            order by 1
+            select s.naam naam, u.studentid studentid, s.klas klas, u.werkproces werkproces, '1' cijfer, u.cijfer cijfer2
+            from uitslag u
+            join student s on s.id=u.studentid 
+            where u.examenid=:examenid
         ";
         $params = [':examenid'=> $examenid];
         $result = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
 
+        // dd($result);
         // print status
         //$sql2="select s.naam naam, p.werkprocesId werkproces, p.status status from beoordeling.printwerkproces p
         //        join student s on s.nummer=p.studentnummer";
@@ -155,7 +162,7 @@ class UitslagController extends Controller
         $params = [':examenid'=> $examenid, ':sortorder'=>$sortorder];
         $progres = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();  // [ 0 => [ 'naam' => 'Achraf Rida ', 'werkproces' => 'B1-K1-W1', 'cnt' => '3'], 1 => .... ]
 
-        // ($progres);
+        // dd($progres);
         // dd($result); // 'naam' => 'Alisha Soedamah', 'studentid' => '122', 'klas' => '0A', 'werkproces' => 'B1-K1-W1', 'cijfer' => '7.0'
 
         // TODO if the uitslag cijfer is gevuld dan cijfer uit uitslagen nemen en niet de bestaande routine gebruiken.
@@ -381,6 +388,7 @@ class UitslagController extends Controller
 
         $examen=Examen::find()->where(['actief'=>1])->asArray()->one();
         $werkprocesses=Werkproces::find()->joinWith('examen')->where(['examen.actief'=>1])->orderBy(['id' => SORT_ASC])->asArray()->all();
+        $werkprocesses = ArrayHelper::index($werkprocesses, 'id');
         $student=Student::find()->where(['id'=>$studentid])->asArray()->one();
         $rolspelers=Rolspeler::find()->select('id, naam')->where(['actief'=>1])->orderBy(['naam'=>SORT_ASC])->asArray()->all();
         $cruciaal=Criterium::find()->select('id, werkprocesid')->where(['cruciaal'=>1])->asArray()->all();
@@ -393,7 +401,6 @@ class UitslagController extends Controller
             $this->createUitslag($studentid);
             return $this->redirect(['/uitslag/result-all', 'studentid'=>$studentid ]);
         }
-
 
         $sql="select * from criterium";
         $rubics = Yii::$app->db->createCommand($sql)->queryAll();
@@ -555,7 +562,7 @@ class UitslagController extends Controller
                     [$veld, $id, $subid] = explode("_",$key);
 
                     if ( $prevId && $prevId!=$id ) {
-                        $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $count*3,$b1,$b2,$cruciaal);
+                        $this->UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $max,$b1,$b2,$cruciaal);
                         $jsonString="";
                         $total=0;
                         $count=0;
@@ -576,20 +583,24 @@ class UitslagController extends Controller
                         $cruciaal=$value;
                     }
 
+                    
+                    if ( $veld == "max" ) {
+                        $max=$value;
+                    }
+
                     if ( $veld == "b1" && $value) { $b1=$value; }
                     if ( $veld == "b2" && $value) { $b2=$value; }
         
                     $prevId=$id;
                 }
             }
-            $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$count*3,$b1,$b2,$cruciaal);
+            $this->UpdateUitslagQuery($jsonString,$opmerking,$prevId,$total,$max,$b1,$b2,$cruciaal);
         }
-        // return $this->redirect('uitslag/result-all?studentid='.$data['studentid']);
-        return $this->goBack((!empty(Yii::$app->request->referrer) ? Yii::$app->request->referrer : null));
+        return $this->redirect(['/uitslag/index']);
+        // return $this->goBack((!empty(Yii::$app->request->referrer) ? Yii::$app->request->referrer : null));
     }
 
     protected function UpdateUitslagQuery($jsonString, $opmerking, $prevId, $total, $maxscore, $beoordeelaar1id, $beoordeelaar2id, $cruciaal) {
-
 
         $cijfer= round( (( max(0,$total) / $maxscore*9+1) +0.049) ,1)*10;
 

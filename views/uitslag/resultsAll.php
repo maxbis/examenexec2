@@ -20,8 +20,8 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 ?>
 
 <script>
-    function changeColor(column, punten, werkproces, cruciaal=0) {
-
+    function changeColor(column, punten, werkproces, cruciaal=0, maxscore) {
+        console.log(punten, maxscore);
         // Get the parent row of the clicked column
         var row = column.parentNode;
         
@@ -55,7 +55,10 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
             }
         }
 
-        var cijfer=Math.round( ((sum/aantal*3+1) + 0.049)*10 )/10;
+        
+        var cijferc=Math.round( ((((sum/aantal)*3)+1) + 0.049)*10 )/10;
+        var cijfer=Math.round( ((sum*9/maxscore+1)+0.049)*10 )/10;
+        console.log(sum, aantal,maxscore, cijfer, aantal*3, cijferc);
 
         document.getElementById("cijfer-"+werkproces).textContent = cijfer;
         if (cruciaal==1) {
@@ -69,6 +72,10 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
     }
 </script>
+
+<form action="update-uitslag" id="myform" method=post>
+<input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+<input type="hidden" name="studentid" value="<?= $student['id']  ?>" />
 
 <div class="card" style="width: 40rem;">
         <div class="card-body">
@@ -92,13 +99,10 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                 <div class="col-sm-5"><?= $student['klas'] ?></div>
             </li>
         </ul>
+        <input class="btn btn-light" type="submit" value="Save All (form)">
     </div>
 
     <br>
-
-    <form action="update-uitslag" id="myform" method=post>
-    <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
-    <input type="hidden" name="studentid" value="<?= $student['id']  ?>" />
 
         <?php
 
@@ -171,20 +175,21 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                 echo "\n<tr>\n";
                 echo "\n<td width=80px>".$rubics[$key]['omschrijving']."</td>";
 
-                echo "\n<td onclick=\"changeColor(this,0,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[0].">".$rubics[$key]['nul']."</td>";
-                echo "\n<td onclick=\"changeColor(this,1,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[1].">".$rubics[$key]['een']."</td>";
-                echo "\n<td onclick=\"changeColor(this,2,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[2].">".$rubics[$key]['twee']."</td>";
-                echo "\n<td onclick=\"changeColor(this,3,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."')\" width=80px bgcolor=".$bgcolor[3].">".$rubics[$key]['drie']."</td>";
+                echo "\n<td onclick=\"changeColor(this,0,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[0].">".$rubics[$key]['nul']."</td>";
+                echo "\n<td onclick=\"changeColor(this,1,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[1].">".$rubics[$key]['een']."</td>";
+                echo "\n<td onclick=\"changeColor(this,2,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[2].">".$rubics[$key]['twee']."</td>";
+                echo "\n<td onclick=\"changeColor(this,3,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[3].">".$rubics[$key]['drie']."</td>";
                 echo "\n<td width=20px align=\"right\"> <input style=\"border:none;color:#d0d0d0\" size=\"1\" type=\"text\" name=\"resultaat_".$uitslag['id']."_".$key."\" value=\"".$resultaat[$key]."\" readonly> </td>";
                 echo "\n</tr>\n";
             }
 
-            echo "</table>";
+                echo "</table>";
 
             echo "<div style=\"color:#d0d0d0;\" id=json-".$uitslag['werkproces'].">";
                 echo json_encode($resultaat);
                 ?>
-                <input style="color:#c0c0c0;border: 0px solid;" type="text" id="cruciaal-<?= $uitslag['werkproces']?>" name="cruciaal_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?=$cruciaal?>" />
+                <input style="color:#c0c0c0;border: 0px solid;width:5;" type="hidden" id="cruciaal-<?= $uitslag['werkproces']?>" name="cruciaal_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?=$cruciaal?>" />
+                <input style="color:#c0c0c0;border: 0px solid;width:5;" type="hidden" id="max-<?= $uitslag['werkproces']?>" name="max_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>" value="<?=$werkprocesses[$uitslag['werkproces']]['maxscore']?>" />
             </div>
             <br>
             <div class="uitslag-form">
@@ -201,7 +206,8 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
         ?>
 
-    <input type="submit" value="Submit">
+    <?= Html::a( 'Cancel', Yii::$app->request->referrer , ['class'=>'btn btn-primary']); ?>
+    <input class="btn btn-danger" type="submit" value="Save All">
     </form>
 
 </div>
