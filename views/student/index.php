@@ -68,6 +68,14 @@ $this->params['breadcrumbs'][] = $this->title;
                     return Html::a($data->naam, ['/gesprek/student?id='.$data->id],['title'=> 'Edit',]);
                     },
             ],
+            [
+                'attribute'=>'beoordeling',
+                'contentOptions' => ['style' => 'width:30px; white-space: normal;'],
+                'format' => 'raw',
+                'value' => function ($data) {
+                    return Html::a('=>', ['/uitslag/result-all?studentid='.$data->id],['title'=> 'Edit',]);
+                    },
+            ],
             // [
             //     'attribute'=>'achternaam',
             //     'contentOptions' => ['style' => 'width:200px; white-space: normal;'],
