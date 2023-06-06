@@ -114,7 +114,7 @@ $numberOfColumns=$colspan*3+5;
                         echo "<td>";
                         $geslaagd++;
                     }
-                    echo $naam."</td>";
+                    echo Html::a( $naam, ['/uitslag/result-all', 'studentid'=>$value['studentid']],[ 'style'=>'color:inherit;text-decoration:inherit;' ] );
 
                     $dezeGemaakt=false;
                     foreach($wp as $thisWp) { // cijfers afdrukken
@@ -125,7 +125,8 @@ $numberOfColumns=$colspan*3+5;
                         echo "<td class=\"even\">"; 
 
                         if ( $examen['actief'] == 1 ) {
-                            echo Html::a($value[$thisWp]['result'][0], ['/uitslag/result', 'studentid'=>$value['studentid'], 'wp'=>$thisWp ] );
+                            # echo Html::a($value[$thisWp]['result'][0], ['/uitslag/result', 'studentid'=>$value['studentid'], 'wp'=>$thisWp ] );
+                            echo $value[$thisWp]['result'][0];
                         } else {
                             echo $value[$thisWp]['result'][0];
                         }
