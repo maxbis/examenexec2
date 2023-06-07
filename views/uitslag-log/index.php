@@ -30,8 +30,8 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'studentid',
             'naam',
             'werkproces',
-            'cijfer',
             'old_cijfer',
+            'cijfer',
             'resultaat:ntext',
             'timestamp',
 

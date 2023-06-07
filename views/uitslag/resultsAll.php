@@ -111,20 +111,26 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
         foreach($uitslagen as $uitslag) {
 
-            echo "<h1>";
-            echo $uitslag['werkproces'];
+            echo "<br><h1>";
+            echo '• '.$uitslag['werkproces'];
             echo "</h1>";
 
             ?>
-            <div class="card" style="width: 40rem;border: 1px solid black;padding:10px;">
-                <div class="row row-cols-3">
-                    <div class="col-4">Beoordeelaar 1</div>
-                    <div class="col-4">Beoordeelaar 2</div>
-                    <div class="col-4">Cijfer</div>
+            <div class="card" style="width: 65rem;border: 1px solid black;padding:10px;">
+                <div class="row row-cols-4">
+                    <div class="col-3">Student</div>
+                    <div class="col-2">Cijfer</div>
+                    <div class="col-3">Beoordeelaar 1</div>
+                    <div class="col-3">Beoordeelaar 2</div>
+                    
                 </div>
 
-                <div class="row row-cols-3">
-                    <div class="col-4">
+                <div class="row row-cols-4">
+                    <div class="col-3"><?= $student['naam'] ?></div>
+
+                    <div id="cijfer-<?= $uitslag['werkproces'] ?>" class="col-2"><?= $uitslag['cijfer']/10 ?></div>
+
+                    <div class="col-3">
                         <select style="background-color:white;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
                         <?php
                         foreach($rolspelers as $rolspeler) {
@@ -135,7 +141,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                         ?>
                         </select>
                     </div>
-                    <div class="col-4">
+                    <div class="col-3">
                         <select style="background-color:#fcfcfc;border-width:1px;" name="b2_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
                         <?php
                         foreach($rolspelers as $rolspeler) {
@@ -146,8 +152,6 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                         ?>
                         </select>
                     </div>
-
-                    <div id="cijfer-<?= $uitslag['werkproces'] ?>" class="col-4"><?= $uitslag['cijfer']/10 ?></div>
 
                 </div>
             </div>
@@ -195,7 +199,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
             <div class="uitslag-form">
                 <div class="row">
                     <div class="col-sm-12">
-                        <textarea name="<?= "opmerking_".$uitslag['id']."_0" ?>" form="myform" style="width:1000px;height:150px;"><?= $uitslag['commentaar'] ?></textarea>
+                        <textarea name="<?= "opmerking_".$uitslag['id']."_0" ?>" form="myform" style="width:65rem;height:150px;"><?= $uitslag['commentaar'] ?></textarea>
                     </div>
                 </div>
             </div>
