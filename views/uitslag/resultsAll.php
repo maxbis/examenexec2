@@ -120,15 +120,15 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                 <div class="row row-cols-4">
                     <div class="col-3">Student</div>
                     <div class="col-2">Cijfer</div>
-                    <div class="col-3">Beoordeelaar 1</div>
-                    <div class="col-3">Beoordeelaar 2</div>
+                    <div class="col-3">Beoordelaar 1</div>
+                    <div class="col-3">Beoordelaar 2</div>
                     
                 </div>
 
                 <div class="row row-cols-4">
                     <div class="col-3"><?= $student['naam'] ?></div>
 
-                    <div id="cijfer-<?= $uitslag['werkproces'] ?>" class="col-2"><?= $uitslag['cijfer']/10 ?></div>
+                    <div id="cijfer-<?= $uitslag['werkproces'] ?>" class="col-2"><?= number_format(($uitslag['cijfer']/10),1,'.','') ?></div>
 
                     <div class="col-3">
                         <select style="background-color:white;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">

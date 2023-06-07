@@ -255,7 +255,7 @@ class UitslagController extends Controller
         $nr=0;
         $fp = fopen('php://output', 'wb');
 
-        $filenaam="Uitslag ".$examen['naam']."csv";
+        $filenaam="Uitslag ".$examen['naam'].".csv";
 
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename='.$filenaam);
