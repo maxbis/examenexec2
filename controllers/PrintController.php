@@ -115,7 +115,6 @@ class PrintController extends Controller
         $params = [':examenid'=> $id];
 
         $studenten=Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
-        //dd($studenten);
         $examen=Examen::find()->where(['actief'=>1])->one();
 
         $fnExamenNaam='kerntaak-'.substr($examen->werkproces[0]->id,0,2).'-'.substr($examen->werkproces[0]->id,3,2);
@@ -149,11 +148,14 @@ class PrintController extends Controller
         }
     
         foreach($studenten as $student) {
+            $pdfFileName = $this->createPdfFilename($student, $examen);
+            d($pdfFileName);
             $content        = $this->actionIndex($student['id'], $examen['id'], null, true);
-            $fnStudentNaam  = $this->createValidFileName(trim($student['naam']),'-');
+            $fnStudentNaam  = $this->createValidFileNamePart(trim($student['naam']),'-');
             $pdfFileName    = $fnStudentNaam.'-'.$fnExamenNaam.'-'.$fnDatum.'-'.$student['nummer'].'.pdf';
             $pdfFileName    = $student['nummer'].'_25187_'.$fnExamenNaam.'_'.$fnDatum.'_'.$fnStudentNaam.'.pdf';
-            $pdfFileName    = $this->createValidFileName($pdfFileName);
+            $pdfFileName    = $this->createValidFileNamePart($pdfFileName);
+            dd($pdfFileName);
             
             $zip->addFromString($pdfFileName, $content);
         }
@@ -277,19 +279,21 @@ class PrintController extends Controller
         } // end all id's
 
         if (count($studentenids)==1) {
-            //$filename=$student['naam'].'-'.$examen['datum_start'].'-'.$this->createValidFileName(trim($student['nummer']));
-            $filename=  $this->createValidFileName(trim($student['naam'])).             // Filtered name
+            //$filename=$student['naam'].'-'.$examen['datum_start'].'-'.$this->createValidFileNamePart(trim($student['nummer']));
+            $filename=  $this->createValidFileNamePart(trim($student['naam'])).             // Filtered name
                         '-kerntaak_'.substr($wp['id'],0,2).substr($wp['id'],3,2).'-'.   // -kerntaak_B1K3-
                         substr($examen['datum_start'],2,2).substr($examen['datum_start'],5,2).substr($examen['datum_start'],8,2). // date yymmdd
-                        '-'.$student['nummer'];                                         // studentnummer
+                        '-'.$student['nummer'];
+            $examen = $examen=Examen::find()->where(['actief'=>1])->one();
+            $filename = $this->createPdfFilename($student, $examen);                                     
         } else {
             $filename=count($studentenids).'-formulieren';
         }
 
         if ($outputToFile) {
-            // $pdf->Output('F','output/'.substr($wp['id'],0,5).' '.$this->createValidFileName($filename).'.pdf');
-            // $pdf->Output('F','output/pdf/'.$this->createValidFileName($filename).'.pdf');
-            return $pdf->Output('S','output/pdf/'.$this->createValidFileName($filename).'.pdf');
+            // $pdf->Output('F','output/'.substr($wp['id'],0,5).' '.$this->createValidFileNamePart($filename).'.pdf');
+            // $pdf->Output('F','output/pdf/'.$this->createValidFileNamePart($filename).'.pdf');
+            return $pdf->Output('S','output/pdf/'.$this->createValidFileNamePart($filename).'.pdf');
         } else {
             $pdf->Output('I',substr($wp['id'],0,5).' '.$filename);
             exit;
@@ -297,11 +301,20 @@ class PrintController extends Controller
 
     }
 
-    function createValidFileName($inputText, $space='_') {
+    private function createValidFileNamePart($inputText, $space='_') {
         $search  = array('ç', 'Ü', 'ü', 'Ç', 'ğ', 'Ğ', 'ı', 'İ', 'ö', 'Ö', 'ş', 'Ş', 'š', 'ć', ' ');
         $replace = array('c', 'U', 'u', 'C', 'g', 'G', 'i', 'I', 'o', 'O', 's', 'S', 's', 'c', $space);
         $outputText=str_replace($search, $replace, $inputText);
         return iconv("UTF-8", "ISO-8859-1//IGNORE", $outputText);
+    }
+
+    private function createPdfFilename($student, $examen) {
+        $fnExamenNaam='kerntaak-'.substr($examen->werkproces[0]->id,0,2).'-'.substr($examen->werkproces[0]->id,3,2);
+        $fnDatum=substr($examen['datum_start'],0,4).substr($examen['datum_start'],5,2).substr($examen['datum_start'],8,2);
+        $fnStudentNaam  = $this->createValidFileNamePart(trim($student['naam']),'-');
+        $pdfFileName    = $student['nummer'].'_25187_'.$fnExamenNaam.'_'.$fnDatum.'_'.$fnStudentNaam.'.pdf';
+        $pdfFileName    = $this->createValidFileNamePart($pdfFileName);
+        return($pdfFileName);
     }
 
 }
