@@ -16,7 +16,6 @@ use yii\helpers\ArrayHelper;
 
 $form = ActiveForm::begin(['action' => 'update',]);
 $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
-
 ?>
 
 <script>
@@ -86,7 +85,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 <div>
 
     <div class="container">
-        <div class="row row-cols-2">
+        <div class="row row-cols-3">
             <div class="col-6 text-left-align">
                 <div class="card"">
                     <div class="card-body">
@@ -113,12 +112,12 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                     <?php if ( ! isset($_GET['snapshot']) ) { ?>
                         <input class="btn btn-light" type="submit" value="Save All (form)">
                     <?php } else { ?>
-                        <input class="btn btn-light" type="submit" value="Restore this snapshot" onclick="return confirm('Are you sure you want to restore this snapshot?');">
+                        <input class="btn btn-light" type="submit" value="Restore this snapshot" onclick="return confirm('Last snapshot will be overwriiten, this cannot be undone. Are you sure?');">
                     <?php } ?>
                 </div>
             </div>
 
-            <div class="col-4 align-self-end">
+            <div class="col-4 align-self-end text-right">
                 <?php
                     if ( ! isset($_GET['snapshot']) ) {
                 ?>
@@ -126,25 +125,26 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                     <option value=''>last</option>
                     <?php
                         $selected='';
-                        foreach($snapshots as $snapshot) {
-                            echo '<option value="' . $snapshot.'" ' . $selected.' >' . $snapshot . '</option>';
+                        foreach($snapshots as $key=>$value) {
+                            echo '<option value="' . $key.'" ' . $selected.' >' . $key .": ".$value. '</option>';
                         }
                     ?>
-                    </select>
+                    </select><br>
                 <?php
                     }else{
-                        echo "<div class='bg-warning text-center'>Looking at snapshot: ".$_GET['snapshot']."</div>";
+                        echo "<div  class='text-center'>";
+                        echo Html::a('Back to Last (snapshot)', [ '/uitslag/result-all/', 'studentid'=>$student['id'] ], ['class'=>'btn btn-primary', 'title'=> 'Last',]);
+                        echo "</div>";
                     }
                 ?>
             </div>
         </div>
     </div>
-
-
-    <br>
+        
+    <br
 
         <?php
-
+        
         // dd($rubics);
         // dd($uitslagen);
 
@@ -153,6 +153,9 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
             echo "<br><h1>";
             echo '• '.$uitslag['werkproces'];
             echo "</h1>";
+            if ( isset($_GET['snapshot']) ) {
+                echo "<div class='bg-warning text-center'>Looking at snapshot: ".$_GET['snapshot']."</div><br>";
+            }
 
             ?>
             <div class="card" style="width: 65rem;border: 1px solid black;padding:10px;">

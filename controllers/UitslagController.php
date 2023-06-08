@@ -415,9 +415,9 @@ class UitslagController extends Controller
         $rubics = Yii::$app->db->createCommand($sql)->queryAll();
         $rubics = ArrayHelper::index($rubics, function($elem) { return $elem['id']; }); 
 
-        $sql="SELECT SUBSTRING(TABLE_NAME, 8) AS snapshot FROM information_schema.TABLES WHERE TABLE_NAME LIKE 'uitslag%' AND LENGTH(SUBSTRING(TABLE_NAME, 8)) = 2;";
+        $sql="SELECT SUBSTRING(TABLE_NAME, 8) AS snapshot, create_time FROM information_schema.TABLES WHERE TABLE_NAME LIKE 'uitslag%' AND LENGTH(SUBSTRING(TABLE_NAME, 8)) = 2;";
         $snapshots=Yii::$app->db->createCommand($sql)->queryAll();
-        $snapshots = ArrayHelper::map($snapshots, 'snapshot', 'snapshot');
+        $snapshots = ArrayHelper::map($snapshots, 'snapshot', 'create_time');
 
         // $uitslagen = ArrayHelper::index($uitslagen, function($elem) { return $elem['werkproces']; }); 
         return $this->render('resultsAll', [
