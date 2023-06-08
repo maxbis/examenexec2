@@ -16,6 +16,8 @@ use yii\helpers\ArrayHelper;
 
 $form = ActiveForm::begin(['action' => 'update',]);
 $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
+
+dd($snapshots);
 ?>
 
 <script>
