@@ -123,7 +123,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                     if ( ! isset($_GET['snapshot']) ) {
                 ?>
                     Snapshot <select onchange="redirectToPage(this, <?=$student['id']?>)" style="background-color:white;border-width:1px;" name="snapshot"?>">
-                    <option value=''>last</option>
+                    <option value=''>current</option>
                     <?php
                         $selected='';
                         foreach($snapshots as $key=>$value) {
@@ -134,7 +134,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                 <?php
                     }else{
                         echo "<div  class='text-center'>";
-                        echo Html::a('Back to Last (snapshot)', [ '/uitslag/result-all/', 'studentid'=>$student['id'] ], ['class'=>'btn btn-primary', 'title'=> 'Last',]);
+                        echo Html::a('Back to current (snapshot)', [ '/uitslag/result-all/', 'studentid'=>$student['id'] ], ['class'=>'btn btn-primary', 'title'=> 'Last',]);
                         echo "</div>";
                     }
                 ?>
