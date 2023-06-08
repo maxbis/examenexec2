@@ -118,7 +118,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                 </div>
             </div>
 
-            <div class="col-4">
+            <div class="col-4 align-self-end">
                 <?php
                     if ( ! isset($_GET['snapshot']) ) {
                 ?>
