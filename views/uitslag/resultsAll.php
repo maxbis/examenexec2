@@ -20,6 +20,12 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 ?>
 
 <script>
+    function redirectToPage(selectElement, studentid){
+        var selectedOption = selectElement.value;
+        var currentPageUrl = window.location.pathname;
+        window.location.href = currentPageUrl + "?studentid="+studentid+"&snapshot=" + selectedOption;
+    }
+
     function changeColor(column, punten, werkproces, cruciaal=0, maxscore) {
         console.log(punten, maxscore);
         // Get the parent row of the clicked column
@@ -77,30 +83,63 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
 <input type="hidden" name="studentid" value="<?= $student['id']  ?>" />
 
-<div class="card" style="width: 40rem;">
-        <div class="card-body">
-            <h4 class="card-header">Persoonsgegevens</h4>
+<div>
+
+    <div class="container">
+        <div class="row row-cols-2">
+            <div class="col-6 text-left-align">
+                <div class="card"">
+                    <div class="card-body">
+                        <h4 class="card-header">Persoonsgegevens</h4>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <div class="col-sm-5">Datum</div>
+                            <div class="col-sm-5"><?= $examen['datum_start'].' t/m '.$examen['datum_eind'] ?></div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="col-sm-5">Kandidaat</div>
+                            <div class="col-sm-5"><?= $student['naam'] ?></div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="col-sm-5">Leerlingnummer</div>
+                            <div class="col-sm-5"><?= $student['nummer'] ?></div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="col-sm-5">Klas</div>
+                            <div class="col-sm-5"><?= $student['klas'] ?></div>
+                        </li>
+                    </ul>
+                    <?php if ( ! isset($_GET['snapshot']) ) { ?>
+                        <input class="btn btn-light" type="submit" value="Save All (form)">
+                    <?php } else { ?>
+                        <input class="btn btn-light" type="submit" value="Restore this snapshot" onclick="return confirm('Are you sure you want to restore this snapshot?');">
+                    <?php } ?>
+                </div>
+            </div>
+
+            <div class="col-4 align-self-end">
+                <?php
+                    if ( ! isset($_GET['snapshot']) ) {
+                ?>
+                    Snapshot <select onchange="redirectToPage(this, <?=$student['id']?>)" style="background-color:white;border-width:1px;" name="snapshot"?>">
+                    <option value=''>last</option>
+                    <?php
+                        $selected='';
+                        foreach($snapshots as $snapshot) {
+                            echo '<option value="' . $snapshot.'" ' . $selected.' >' . $snapshot . '</option>';
+                        }
+                    ?>
+                    </select>
+                <?php
+                    }else{
+                        echo "<div class='bg-warning text-center'>Looking at snapshot: ".$_GET['snapshot']."</div>";
+                    }
+                ?>
+            </div>
         </div>
-        <ul class="list-group">
-            <li class="list-group-item">
-                <div class="col-sm-5">Datum</div>
-                <div class="col-sm-5"><?= $examen['datum_start'].' t/m '.$examen['datum_eind'] ?></div>
-            </li>
-            <li class="list-group-item">
-                <div class="col-sm-5">Kandidaat</div>
-                <div class="col-sm-5"><?= $student['naam'] ?></div>
-            </li>
-            <li class="list-group-item">
-                <div class="col-sm-5">Leerlingnummer</div>
-                <div class="col-sm-5"><?= $student['nummer'] ?></div>
-            </li>
-            <li class="list-group-item">
-                <div class="col-sm-5">Klas</div>
-                <div class="col-sm-5"><?= $student['klas'] ?></div>
-            </li>
-        </ul>
-        <input class="btn btn-light" type="submit" value="Save All (form)">
     </div>
+
 
     <br>
 
@@ -211,12 +250,14 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
         ?>
 
     <br>
-    <label><input type="checkbox" id="ready" name="ready" value="1"> Alles gecontroleerd en klaar voor printen.</label>
-    &nbsp;&nbsp;&nbsp;<small> (Als er na 'print-ready' iets wordt veranderd, dan verdwijnt het vinkje weer.)</small>
-    <br>
-    <?= Html::a( 'Cancel', Yii::$app->request->referrer , ['class'=>'btn btn-primary']); ?>
-    <input class="btn btn-danger" type="submit" value="Save All">
-    <br>
+    <?php if ( ! isset($_GET['snapshot']) ) { ?>
+        <label><input type="checkbox" id="ready" name="ready" value="1"> Alles gecontroleerd en klaar voor printen.</label>
+        &nbsp;&nbsp;&nbsp;<small> (Als er na 'print-ready' iets wordt veranderd, dan verdwijnt het vinkje weer.)</small>
+        <br>
+        <?= Html::a( 'Cancel', Yii::$app->request->referrer , ['class'=>'btn btn-primary']); ?>
+        <input class="btn btn-danger" type="submit" value="Save All">
+        <br>
+    <?php } ?>
     </form>
 
 </div>
