@@ -417,7 +417,9 @@ class UitslagController extends Controller
 
         $sql="SELECT SUBSTRING(TABLE_NAME, 8) AS snapshot, create_time FROM information_schema.TABLES WHERE TABLE_NAME LIKE 'uitslag%' AND LENGTH(SUBSTRING(TABLE_NAME, 8)) = 2;";
         $snapshots=Yii::$app->db->createCommand($sql)->queryAll();
+        d($snapshots);
         $snapshots = ArrayHelper::map($snapshots, 'snapshot', 'create_time');
+        dd($snapshots);
 
         // $uitslagen = ArrayHelper::index($uitslagen, function($elem) { return $elem['werkproces']; }); 
         return $this->render('resultsAll', [
