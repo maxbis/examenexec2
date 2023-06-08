@@ -384,7 +384,16 @@ class UitslagController extends Controller
 
     }
 
-    function actionResultAll($studentid){
+    function actionCreateSnapshot($snapshot) {
+        $sql="CREATE TABLE uitslag".$snapshot." LIKE `uitslag`;INSERT INTO uitslag".$snapshot." SELECT * FROM `uitslag`;";
+        $results = Yii::$app->db->createCommand($sql)->execute();
+        $string = '<h2>';
+        $string .= "Snapshot $snapshot created";
+        $string .= '</h2>';
+        return $this->render('outputString', [ 'string' => $string, ] );
+    }
+
+    function actionResultAll($studentid, $snapshot=''){
 
         $examen=Examen::find()->where(['actief'=>1])->asArray()->one();
         $werkprocesses=Werkproces::find()->joinWith('examen')->where(['examen.actief'=>1])->orderBy(['id' => SORT_ASC])->asArray()->all();
@@ -394,7 +403,7 @@ class UitslagController extends Controller
         $cruciaal=Criterium::find()->select('id, werkprocesid')->where(['cruciaal'=>1])->asArray()->all();
         $cruciaal = ArrayHelper::map($cruciaal, 'id','werkprocesid');
 
-        $sql="select * from uitslag where examenid=".$examen['id']." and studentid=".$studentid." order by werkproces";
+        $sql="select * from uitslag".$snapshot." where examenid=".$examen['id']." and studentid=".$studentid." order by werkproces";
         $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
 
         if ( ! $uitslagen ){
@@ -406,6 +415,10 @@ class UitslagController extends Controller
         $rubics = Yii::$app->db->createCommand($sql)->queryAll();
         $rubics = ArrayHelper::index($rubics, function($elem) { return $elem['id']; }); 
 
+        $sql="SELECT SUBSTRING(TABLE_NAME, 8) AS snapshot FROM information_schema.TABLES WHERE TABLE_NAME LIKE 'uitslag%' AND LENGTH(SUBSTRING(TABLE_NAME, 8)) = 2;";
+        $snapshots=Yii::$app->db->createCommand($sql)->queryAll();
+        $snapshots = ArrayHelper::map($snapshots, 'snapshot', 'snapshot');
+
         // $uitslagen = ArrayHelper::index($uitslagen, function($elem) { return $elem['werkproces']; }); 
         return $this->render('resultsAll', [
             'examen' => $examen,
@@ -414,7 +427,8 @@ class UitslagController extends Controller
             'rolspelers' => $rolspelers,
             'uitslagen' => $uitslagen,
             'rubics' => $rubics,
-            'cruciaal' => $cruciaal
+            'cruciaal' => $cruciaal,
+            'snapshots' => $snapshots,
         ]);
 
     }
