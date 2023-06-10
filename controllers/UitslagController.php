@@ -136,7 +136,7 @@ class UitslagController extends Controller
             select s.naam naam, u.studentid studentid, s.klas klas, u.werkproces werkproces, '1' cijfer, u.cijfer cijfer2
             from uitslag u
             join student s on s.id=u.studentid 
-            where u.examenid=:examenid
+            where u.examenid=:examenid and s.actief=1
         ";
         $params = [':examenid'=> $examenid];
         $result = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
@@ -157,6 +157,7 @@ class UitslagController extends Controller
             LEFT JOIN uitslag u ON u.studentid=g.studentid AND u.werkproces=f.werkproces AND u.examenid=:examenid
             WHERE e.id=:examenid
             AND f.examenid=:examenid
+            AND s.actief=1
             GROUP BY 1,2,3
             ORDER BY SUBSTRING_INDEX(TRIM(s.naam), ' ', :sortorder) ,f.werkproces";
         $params = [':examenid'=> $examenid, ':sortorder'=>$sortorder];
@@ -190,7 +191,7 @@ class UitslagController extends Controller
            
         }
         // dd($result);
-        
+
         foreach($result as $item) { // Result [ cijfer, result(O, V, G) ]
             // if cruciaal item niet gehaald, cijfer = 1.0 and result = O
             // ToDo
@@ -204,7 +205,6 @@ class UitslagController extends Controller
         }
         // d($wp);
         // d($werkproces);
-        // dd($dataSet);
 
         // create cruciaalList, ass. array with key studentid.werkprocess to indicate that this student for this wp has failed becasue of crucial item
         // $sql="
@@ -239,6 +239,7 @@ class UitslagController extends Controller
         if ($export) $this->dataToExcel($dataSet, $wp, $examen);
 
        // dd($cruciaalList);
+
         return $this->render('index', [
             'dataSet' => $dataSet,
             'formWpCount' =>$formWpCount, // formcount per wp

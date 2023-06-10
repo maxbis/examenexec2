@@ -110,6 +110,7 @@ class PrintController extends Controller
             AND u.beoordeelaar1id IS NOT null
             AND u.beoordeelaar2id IS NOT null
             AND u.examenid=:examenid
+            AND s.actief=1
         ';
 
         $params = [':examenid'=> $id];
