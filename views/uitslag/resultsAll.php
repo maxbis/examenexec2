@@ -148,6 +148,19 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
         
         // dd($rubics);
         // dd($uitslagen);
+       
+        $rolspelers = ArrayHelper::map($rolspelers, 'id', 'naam');
+        // dd($rolspelers);
+        $readonly='';
+        $checked='';
+
+        foreach($uitslagen as $uitslag) { // when one of the items ia locked, the whole form
+            if ($uitslag['ready']  ) {
+                $readonly='readonly';
+                $checked='checked';
+                break;
+            }
+        }
 
         foreach($uitslagen as $uitslag) {
 
@@ -174,26 +187,36 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                     <div id="cijfer-<?= $uitslag['werkproces'] ?>" class="col-2"><?= number_format(($uitslag['cijfer']/10),1,'.','') ?></div>
 
                     <div class="col-3">
-                        <select style="background-color:white;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
                         <?php
-                        foreach($rolspelers as $rolspeler) {
-                            $selected="";
-                            if ( $uitslag['beoordeelaar1id']  ==  $rolspeler['id'] ) $selected="selected"; 
-                            echo '<option value="' . $rolspeler['id'].'" '. $selected.'>' . $rolspeler['naam'] . '</option>';
-                        }
-                        ?>
-                        </select>
+                            if ($uitslag['ready']) {
+                                echo $rolspelers[$uitslag['beoordeelaar1id']];
+                            } else { ?>
+                                <select style="background-color:white;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
+                                <?php
+                                foreach($rolspelers as $$key=>$value) {
+                                    $selected="";
+                                    if ( $uitslag['beoordeelaar1id']  ==  $key ) $selected="selected"; 
+                                    echo '<option value="' . $key.'" '. $selected.'>' . $value . '</option>';
+                                }
+                                ?>
+                                </select>
+                            <?php } ?>
                     </div>
                     <div class="col-3">
-                        <select style="background-color:#fcfcfc;border-width:1px;" name="b2_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
-                        <?php
-                        foreach($rolspelers as $rolspeler) {
-                            $selected="";
-                            if ( $uitslag['beoordeelaar2id']  ==  $rolspeler['id'] ) $selected="selected"; 
-                            echo '<option value="' . $rolspeler['id'].'" ' . $selected.' >' . $rolspeler['naam'] . '</option>';
-                        }
-                        ?>
-                        </select>
+                    <?php
+                            if ($uitslag['ready']) {
+                                echo $rolspelers[$uitslag['beoordeelaar2id']];
+                            } else { ?>
+                                <select style="background-color:#fcfcfc;border-width:1px;" name="b2_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
+                                <?php
+                                foreach($rolspelers as $$key=>$value) {
+                                    $selected="";
+                                    if ( $uitslag['beoordeelaar2id']  ==  $key ) $selected="selected"; 
+                                    echo '<option value="' . $key.'" '. $selected.'>' . $value . '</option>';
+                            }
+                                ?>
+                                </select>
+                            <?php } ?>
                     </div>
 
                 </div>
@@ -221,11 +244,17 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
                 echo "\n<tr>\n";
                 echo "\n<td width=80px>".$rubics[$key]['omschrijving']."</td>";
-
-                echo "\n<td onclick=\"changeColor(this,0,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[0].">".$rubics[$key]['nul']."</td>";
-                echo "\n<td onclick=\"changeColor(this,1,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[1].">".$rubics[$key]['een']."</td>";
-                echo "\n<td onclick=\"changeColor(this,2,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[2].">".$rubics[$key]['twee']."</td>";
-                echo "\n<td onclick=\"changeColor(this,3,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[3].">".$rubics[$key]['drie']."</td>";
+                if ( $uitslag['ready'] ) {
+                    echo "\n<td width=80px bgcolor=".$bgcolor[0].">".$rubics[$key]['nul']."</td>";
+                    echo "\n<td width=80px bgcolor=".$bgcolor[1].">".$rubics[$key]['een']."</td>";
+                    echo "\n<td width=80px bgcolor=".$bgcolor[2].">".$rubics[$key]['twee']."</td>";
+                    echo "\n<td width=80px bgcolor=".$bgcolor[3].">".$rubics[$key]['drie']."</td>";
+                } else {
+                    echo "\n<td onclick=\"changeColor(this,0,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[0].">".$rubics[$key]['nul']."</td>";
+                    echo "\n<td onclick=\"changeColor(this,1,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[1].">".$rubics[$key]['een']."</td>";
+                    echo "\n<td onclick=\"changeColor(this,2,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[2].">".$rubics[$key]['twee']."</td>";
+                    echo "\n<td onclick=\"changeColor(this,3,'".$uitslag['werkproces']."','".$rubics[$key]['cruciaal']."','".$werkprocesses[$uitslag['werkproces']]['maxscore']."')\" width=80px bgcolor=".$bgcolor[3].">".$rubics[$key]['drie']."</td>";
+                }
                 echo "\n<td width=20px align=\"right\"> <input style=\"border:none;color:#d0d0d0\" size=\"1\" type=\"text\" name=\"resultaat_".$uitslag['id']."_".$key."\" value=\"".$resultaat[$key]."\" readonly> </td>";
                 echo "\n</tr>\n";
             }
@@ -242,7 +271,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
             <div class="uitslag-form">
                 <div class="row">
                     <div class="col-sm-12">
-                        <textarea name="<?= "opmerking_".$uitslag['id']."_0" ?>" form="myform" style="width:65rem;height:150px;"><?= $uitslag['commentaar'] ?></textarea>
+                        <textarea name="<?= "opmerking_".$uitslag['id']."_0" ?>" form="myform" style="width:65rem;height:150px;" <?= $readonly ?>><?= $uitslag['commentaar'] ?></textarea>
                     </div>
                 </div>
             </div>
@@ -255,7 +284,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
 
     <br>
     <?php if ( ! isset($_GET['snapshot']) ) { ?>
-        <label><input type="checkbox" id="ready" name="ready" value="1"> Alles gecontroleerd en klaar voor printen.</label>
+        <label><input type="checkbox" id="ready" name="ready" value="1" <?= $checked ?> > Alles gecontroleerd en klaar voor printen.</label>
         &nbsp;&nbsp;&nbsp;<small> (Als er na 'print-ready' iets wordt veranderd, dan verdwijnt het vinkje weer.)</small>
         <br>
         <?= Html::a( 'Cancel', Yii::$app->request->referrer , ['class'=>'btn btn-primary']); ?>
