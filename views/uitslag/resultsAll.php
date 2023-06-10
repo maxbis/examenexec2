@@ -193,7 +193,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                             } else { ?>
                                 <select style="background-color:white;border-width:1px;" name="b1_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
                                 <?php
-                                foreach($rolspelers as $$key=>$value) {
+                                foreach($rolspelers as $key=>$value) {
                                     $selected="";
                                     if ( $uitslag['beoordeelaar1id']  ==  $key ) $selected="selected"; 
                                     echo '<option value="' . $key.'" '. $selected.'>' . $value . '</option>';
@@ -209,7 +209,7 @@ $rolspelerList=ArrayHelper::map($rolspelers,'id','naam');
                             } else { ?>
                                 <select style="background-color:#fcfcfc;border-width:1px;" name="b2_<?=$uitslag['id']?>_<?= $uitslag['werkproces']?>">
                                 <?php
-                                foreach($rolspelers as $$key=>$value) {
+                                foreach($rolspelers as $key=>$value) {
                                     $selected="";
                                     if ( $uitslag['beoordeelaar2id']  ==  $key ) $selected="selected"; 
                                     echo '<option value="' . $key.'" '. $selected.'>' . $value . '</option>';
