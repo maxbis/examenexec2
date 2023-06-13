@@ -162,6 +162,9 @@ class UitslagController extends Controller
             ORDER BY SUBSTRING_INDEX(TRIM(s.naam), ' ', :sortorder) ,f.werkproces";
         $params = [':examenid'=> $examenid, ':sortorder'=>$sortorder];
         $progres = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();  // [ 0 => [ 'naam' => 'Achraf Rida ', 'werkproces' => 'B1-K1-W1', 'cnt' => '3'], 1 => .... ]
+        # When no subforms a re present the print-readyness is depended in the status in uitslag
+        $sql = "Select s.naam, u.werkproces, u.ready from uitslag u join student s on s.id=u.studentid where s.actief=1";
+        $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
 
         // dd($progres);
         // dd($result); // 'naam' => 'Alisha Soedamah', 'studentid' => '122', 'klas' => '0A', 'werkproces' => 'B1-K1-W1', 'cijfer' => '7.0'
@@ -182,6 +185,14 @@ class UitslagController extends Controller
             $dataSet[$item['naam']]['studentid']="";
         }
 
+        foreach($uitslagen as $uitslag) {
+            if ($uitslag['ready']==1) {
+                $dataSet[$uitslag['naam']][$uitslag['werkproces']]['status']=99;
+            } else {
+                $dataSet[$uitslag['naam']][$uitslag['werkproces']]['status']=0;
+            }
+        }
+
         foreach($progres as $item) { // count forms per werproces
             if ( $item['ready'] ) {
                 $dataSet[$item['naam']][$item['werkproces']]['status']=99;
@@ -190,7 +201,6 @@ class UitslagController extends Controller
             }
            
         }
-        // dd($result);
 
         foreach($result as $item) { // Result [ cijfer, result(O, V, G) ]
             // if cruciaal item niet gehaald, cijfer = 1.0 and result = O
@@ -239,6 +249,7 @@ class UitslagController extends Controller
         if ($export) $this->dataToExcel($dataSet, $wp, $examen);
 
        // dd($cruciaalList);
+       // dd($dataSet);
 
         return $this->render('index', [
             'dataSet' => $dataSet,
