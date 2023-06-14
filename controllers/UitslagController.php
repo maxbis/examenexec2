@@ -163,7 +163,7 @@ class UitslagController extends Controller
         $params = [':examenid'=> $examenid, ':sortorder'=>$sortorder];
         $progres = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();  // [ 0 => [ 'naam' => 'Achraf Rida ', 'werkproces' => 'B1-K1-W1', 'cnt' => '3'], 1 => .... ]
         # When no subforms a re present the print-readyness is depended in the status in uitslag
-        $sql = "Select s.naam, u.werkproces, u.ready from uitslag u join student s on s.id=u.studentid where s.actief=1";
+        $sql = "Select s.naam, u.werkproces, u.ready from uitslag u join student s on s.id=u.studentid join examen e on e.id=u.examenid and e.actief=1 where s.actief=1";
         $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
 
         // dd($progres);

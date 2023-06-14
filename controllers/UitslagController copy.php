@@ -167,6 +167,7 @@ class UitslagController extends Controller
         $sql = "Select s.naam, u.werkproces, u.ready from uitslag u join student s on s.id=u.studentid where s.actief=1";
         $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
 
+        dd($progres);
         // dd($result); // 'naam' => 'Alisha Soedamah', 'studentid' => '122', 'klas' => '0A', 'werkproces' => 'B1-K1-W1', 'cijfer' => '7.0'
 
         // TODO if the uitslag cijfer is gevuld dan cijfer uit uitslagen nemen en niet de bestaande routine gebruiken.
