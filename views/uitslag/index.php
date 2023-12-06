@@ -149,7 +149,7 @@ $numberOfColumns=$colspan*3+5;
                         } 
                     }
                     echo "<td>&nbsp;</td>";
-
+                    
                     foreach($wp as $thisWp) { // Print Ready
                         echo "<td class=\"even\">"; 
                         if ( $value[$thisWp]['status']==$formWpCount[$thisWp] ) echo  Html::a( "<div class=\"text-success\"><b>".$value[$thisWp]['status']."</b></div>" , ['/uitslag/result', 'studentid'=>$value['studentid'], 'wp'=>$thisWp ] );

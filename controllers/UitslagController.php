@@ -100,38 +100,16 @@ class UitslagController extends Controller
 
     public function actionIndex($examenid="", $sortorder=1, $export=0) {
         // if no parameter is specified then taken the active exam (examen.actief=1)
-        // SPL uses wierd round up; it will always round up to the next 0.1 so 3.01 -> 3.1
+        // SPL uses weird round up; it will always round up to the next 0.1 so 3.01 -> 3.1
 
-        $examen=Examen::find()->where(['actief'=>1])->asArray()->one();
-
-
-        if ( ! $examenid ) {
-            $examenid = $examen['id'];
-        } else {
-            $examen=Examen::find()->where(['id' => $examenid])->asArray()->one();
+        if ( $examenid ) {
+            $sql="update examen set actief=1 where id = :id; update examen set actief=0 where id != :id;";
+            $params = array(':id'=> $examenid);
+            Yii::$app->db->createCommand($sql)->bindValues($params)->execute();
         }
+        $examen=Examen::find()->where(['actief'=>1])->asArray()->one();
+        $examenid = $examen['id'];
 
-        // $sql="
-        //     select naam, studentid, klas, formnaam werkproces, round( ((greatest(0,sum(score))  /maxscore*9+1))+0.049 ,1)  cijfer, cijfer2
-        //         from (
-        //             SELECT s.naam naam, s.id studentid, s.klas klas, f.werkproces formnaam, v.mappingid mappingid, 
-        //             round(sum(r.score)/10,0) score, u.cijfer cijfer2
-        //             FROM results r
-        //             INNER JOIN student s on s.id=r.studentid
-        //             INNER JOIN vraag v on v.formid = r.formid
-        //             INNER JOIN form f on f.id=v.formid
-        //             INNER JOIN examen e on e.id=f.examenid
-        //             LEFT OUTER join uitslag u on u.werkproces=f.werkproces and u.studentid=s.id
-        //             WHERE v.volgnr = r.vraagnr
-        //             AND e.id=:examenid
-        //             AND f.examenid=:examenid
-        //             GROUP BY 1,2,3,4,5,7
-        //             ORDER BY 1,2
-        //         ) as sub
-        //     INNER JOIN werkproces w ON w.id=formnaam
-        //     group by 1,2,3,4,6
-        //     order by 1
-        // ";
         $sql="
             select s.naam naam, u.studentid studentid, s.klas klas, u.werkproces werkproces, '1' cijfer, u.cijfer cijfer2
             from uitslag u
@@ -140,12 +118,6 @@ class UitslagController extends Controller
         ";
         $params = [':examenid'=> $examenid];
         $result = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
-
-        // dd($result);
-        // print status
-        //$sql2="select s.naam naam, p.werkprocesId werkproces, p.status status from beoordeling.printwerkproces p
-        //        join student s on s.nummer=p.studentnummer";
-        // $result2 = Yii::$app->db->createCommand($sql2)->queryAll();
 
         $formWpCount = $this->formWpCount($examenid);
         
@@ -157,18 +129,26 @@ class UitslagController extends Controller
             LEFT JOIN uitslag u ON u.studentid=g.studentid AND u.werkproces=f.werkproces AND u.examenid=:examenid
             WHERE e.id=:examenid
             AND f.examenid=:examenid
-            AND s.actief=1
+            -- AND s.actief=1
             GROUP BY 1,2,3
-            ORDER BY SUBSTRING_INDEX(TRIM(s.naam), ' ', :sortorder) ,f.werkproces";
+            ";
+
         $params = [':examenid'=> $examenid, ':sortorder'=>$sortorder];
         $progres = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();  // [ 0 => [ 'naam' => 'Achraf Rida ', 'werkproces' => 'B1-K1-W1', 'cnt' => '3'], 1 => .... ]
+
         # When no subforms a re present the print-readyness is depended in the status in uitslag
-        $sql = "Select s.naam, u.werkproces, u.ready from uitslag u join student s on s.id=u.studentid join examen e on e.id=u.examenid and e.actief=1 where s.actief=1";
-        $uitslagen = Yii::$app->db->createCommand($sql)->queryAll();
+        $sql = "Select s.naam, u.werkproces, u.ready
+                from uitslag u
+                join student s on s.id=u.studentid
+                join examen e on e.id=u.examenid
+                where s.actief=1 and u.examenid=:examenid
+                ORDER BY SUBSTRING_INDEX(TRIM(s.naam), ' ', :sortorder)";
+        $params = [':examenid'=> $examenid, ':sortorder'=>$sortorder];
+        $uitslagen = Yii::$app->db->createCommand($sql)->bindValues($params)->queryAll();
 
         // dd($progres);
         // dd($result); // 'naam' => 'Alisha Soedamah', 'studentid' => '122', 'klas' => '0A', 'werkproces' => 'B1-K1-W1', 'cijfer' => '7.0'
-
+        // dd($uitslagen);
         // TODO if the uitslag cijfer is gevuld dan cijfer uit uitslagen nemen en niet de bestaande routine gebruiken.
 
         $wp=[];
@@ -177,13 +157,6 @@ class UitslagController extends Controller
         }
 
         $dataSet=[];
-        foreach($progres as $item) { // init datastructure
-            foreach($wp as $thisWp) {
-                $dataSet[$item['naam']][$thisWp]['result']=['', ''];
-                $dataSet[$item['naam']][$thisWp]['status']=0;
-            }
-            $dataSet[$item['naam']]['studentid']="";
-        }
 
         foreach($uitslagen as $uitslag) {
             if ($uitslag['ready']==1) {
@@ -193,15 +166,22 @@ class UitslagController extends Controller
             }
         }
 
+        foreach($progres as $item) { // init datastructure
+            foreach($wp as $thisWp) {
+                $dataSet[$item['naam']][$thisWp]['result']=['', ''];
+                $dataSet[$item['naam']][$thisWp]['status']=0;
+            }
+            $dataSet[$item['naam']]['studentid']="";
+        }
+
         foreach($progres as $item) { // count forms per werproces
             if ( $item['ready'] ) {
                 $dataSet[$item['naam']][$item['werkproces']]['status']=99;
             } else {
                 $dataSet[$item['naam']][$item['werkproces']]['status']=$item['cnt'];
             }
-           
         }
-
+        
         foreach($result as $item) { // Result [ cijfer, result(O, V, G) ]
             // if cruciaal item niet gehaald, cijfer = 1.0 and result = O
             // ToDo
